@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teacher Planning Daybook</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <style>
     * {
       margin: 0;
@@ -395,6 +397,7 @@
         <div class="date-display" id="dateDisplay"></div>
         <button onclick="nextWeek()">Next →</button>
         <button onclick="goToday()">Today</button>
+        <button onclick="setupSync()" id="syncBtn" title="Set up cross-device sync">🔄 <span id="syncStatus">Not synced</span></button>
       </div>
     </header>
     
@@ -559,6 +562,101 @@
     
     function savePlanData() {
       localStorage.setItem('teacherDaybook', JSON.stringify(planData));
+      pushToCloud();
+    }
+    
+    // ===== CROSS-DEVICE SYNC (Firebase Firestore) =====
+    // PASTE YOUR firebaseConfig FROM THE FIREBASE CONSOLE HERE:
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlvTecXVHkoR7CZBMZ7rBwP47bN8ynkK0",
+      authDomain: "daybook-3c39c.firebaseapp.com",
+      projectId: "daybook-3c39c",
+      storageBucket: "daybook-3c39c.firebasestorage.app",
+      messagingSenderId: "673483245849",
+      appId: "1:673483245849:web:9101a11007bc527501dd88"
+    };
+    
+    const FIREBASE_CONFIGURED = firebaseConfig.apiKey !== 'YOUR_API_KEY';
+    let syncCode = localStorage.getItem('daybookSyncCode') || '';
+    let db = null;
+    let unsubscribeListener = null;
+    let applyingRemoteUpdate = false; // guards against feedback loops
+    
+    if (FIREBASE_CONFIGURED) {
+      try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+      } catch (e) {
+        console.error('Firebase init failed', e);
+      }
+    }
+    
+    function updateSyncStatusUI(text) {
+      const el = document.getElementById('syncStatus');
+      if (el) el.textContent = text;
+    }
+    
+    function setupSync() {
+      if (!FIREBASE_CONFIGURED) {
+        alert('Sync isn\'t configured in this file yet. Paste your firebaseConfig into the script (see the comment marked "PASTE YOUR firebaseConfig HERE") and re-upload the file.');
+        return;
+      }
+      const entered = prompt(
+        'Enter a long, unique sync code (12+ characters).\nUse this exact same code on every device you want synced:',
+        syncCode || ''
+      );
+      if (entered === null) return; // cancelled
+      const trimmed = entered.trim();
+      if (trimmed.length < 12) {
+        alert('Sync code must be at least 12 characters for security. Try something like a memorable passphrase.');
+        return;
+      }
+      syncCode = trimmed;
+      localStorage.setItem('daybookSyncCode', syncCode);
+      attachSyncListener();
+    }
+    
+    function attachSyncListener() {
+      if (!db || !syncCode) {
+        updateSyncStatusUI('Not synced');
+        return;
+      }
+      if (unsubscribeListener) unsubscribeListener();
+      updateSyncStatusUI('Connecting…');
+      const ref = db.collection('daybooks').doc(syncCode);
+      unsubscribeListener = ref.onSnapshot(
+        (doc) => {
+          updateSyncStatusUI('Synced');
+          if (doc.exists) {
+            const remote = doc.data();
+            const remoteData = remote && remote.data ? JSON.parse(remote.data) : {};
+            applyingRemoteUpdate = true;
+            planData = remoteData;
+            localStorage.setItem('teacherDaybook', JSON.stringify(planData));
+            if (selectedDate) selectDay(selectedDate); else renderWeek();
+            applyingRemoteUpdate = false;
+          } else {
+            // First time this sync code is used — seed the cloud with local data
+            pushToCloud();
+          }
+        },
+        (err) => {
+          console.error('Sync listen failed', err);
+          updateSyncStatusUI('Sync error');
+        }
+      );
+    }
+    
+    function pushToCloud() {
+      if (!db || !syncCode || applyingRemoteUpdate) return;
+      db.collection('daybooks').doc(syncCode).set({
+        data: JSON.stringify(planData),
+        updatedAt: Date.now()
+      }).catch((err) => {
+        console.error('Sync save failed', err);
+        updateSyncStatusUI('Sync error');
+      });
     }
     
     function getPlanEntry(dateStr, period) {
@@ -862,6 +960,7 @@
     // Initialize
     loadPlanData();
     selectDay(dateToString(new Date()));
+    if (FIREBASE_CONFIGURED && syncCode) attachSyncListener();
   </script>
 </body>
 </html>
