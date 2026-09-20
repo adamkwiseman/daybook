@@ -922,6 +922,16 @@
       
       const element = document.createElement('div');
       element.innerHTML = html;
+      // html2canvas can only capture elements that are actually in the DOM,
+      // so attach it off-screen (invisible to the user) before rendering,
+      // then remove it once the PDF has been generated.
+      element.style.position = 'fixed';
+      element.style.top = '0';
+      element.style.left = '-9999px';
+      element.style.width = '190mm';
+      element.style.background = '#ffffff';
+      element.style.padding = '10px';
+      document.body.appendChild(element);
       
       const opt = {
         margin: 10,
@@ -931,7 +941,14 @@
         jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
       };
       
-      html2pdf().set(opt).from(element).save();
+      html2pdf().set(opt).from(element).save()
+        .catch((err) => {
+          console.error('PDF export failed', err);
+          alert('PDF export failed — please try again.');
+        })
+        .finally(() => {
+          document.body.removeChild(element);
+        });
     }
     
     function backToWeek() {
