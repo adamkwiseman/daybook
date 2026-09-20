@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teacher Planning Daybook</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <style>
@@ -386,6 +385,52 @@
         gap: 12px;
       }
     }
+    
+    /* ===== PRINT / SAVE AS PDF =====
+       Uses the browser's native print pipeline instead of a canvas-screenshot
+       library — far more reliable, and produces real selectable text. */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #dailyView, #dailyView * {
+        visibility: visible;
+      }
+      #dailyView {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: block !important;
+      }
+      #dailyView .controls {
+        display: none !important;
+      }
+      /* Show every tab's content at once, and every period expanded,
+         regardless of what was open on screen */
+      .tabs {
+        display: none !important;
+      }
+      .tab-content {
+        display: block !important;
+        margin-bottom: 10px;
+      }
+      .period-content {
+        display: block !important;
+      }
+      .period-header .arrow {
+        display: none;
+      }
+      .period-block {
+        break-inside: avoid;
+        box-shadow: none !important;
+      }
+      textarea {
+        border: 1px solid #ccc;
+        overflow: visible;
+        resize: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -415,7 +460,7 @@
       </div>
       <div id="periodsContainer"></div>
       <div class="controls">
-        <button class="btn-primary" onclick="exportPDF()">📥 Export as PDF</button>
+        <button class="btn-primary" onclick="exportPDF()">🖨️ Print / Save as PDF</button>
         <button onclick="backToWeek()">← Back to Week</button>
       </div>
     </div>
@@ -886,72 +931,27 @@
         return;
       }
       
-      const header = document.getElementById('dailyHeader').textContent;
-      const periods = document.querySelectorAll('.period-block');
-      
-      let html = `<h1>${header}</h1>`;
-      
-      periods.forEach((block, idx) => {
-        const period = PERIODS[idx];
-        const headerEl = block.querySelector('.period-header');
-        const content = block.querySelector('.period-content');
-        
-        const isDutyOrBreak = period.type === 'duty' || period.type === 'break';
-        
-        let periodLabel = '';
-        if (isDutyOrBreak) {
-          periodLabel = period.type === 'duty' ? 'Back Tarmac Duty' : 'Nutrition Break';
-        } else {
-          periodLabel = `Period ${period.num}`;
-        }
-        
-        html += `<h2>${periodLabel} (${period.time})</h2>`;
-        
-        if (!isDutyOrBreak) {
-          const plan = content.querySelectorAll('[data-tab="plan"] textarea');
-          if (plan[0].value) html += `<p><strong>Objective:</strong> ${plan[0].value}</p>`;
-          if (plan[1].value) html += `<p><strong>Activities:</strong> ${plan[1].value}</p>`;
-          if (plan[2].value) html += `<p><strong>Resources:</strong> ${plan[2].value}</p>`;
-          
-          const prep = content.querySelector('[data-tab="prep"] textarea').value;
-          if (prep) html += `<p><strong>Prep Notes:</strong> ${prep}</p>`;
-        }
-        
-        html += '<hr>';
+      // Auto-expand every textarea so full content prints instead of being
+      // clipped by its on-screen scrollable box height.
+      const areas = document.querySelectorAll('#dailyView textarea');
+      const originalHeights = [];
+      areas.forEach((a) => {
+        originalHeights.push(a.style.height);
+        a.style.height = 'auto';
+        a.style.height = (a.scrollHeight + 4) + 'px';
       });
       
-      const element = document.createElement('div');
-      element.innerHTML = html;
-      // html2canvas can only capture elements that are actually in the DOM,
-      // so attach it off-screen (invisible to the user) before rendering,
-      // then remove it once the PDF has been generated.
-      // html2canvas has a well-known bug where `position: fixed` elements
-      // often capture blank. `absolute` (positioned relative to the normal
-      // document flow) is the reliable pattern for off-screen rendering.
-      element.style.position = 'absolute';
-      element.style.top = '0';
-      element.style.left = '-9999px';
-      element.style.width = '190mm';
-      element.style.background = '#ffffff';
-      element.style.padding = '10px';
-      document.body.appendChild(element);
-      
-      const opt = {
-        margin: 10,
-        filename: `lesson-plan-${selectedDate}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+      const restore = () => {
+        areas.forEach((a, i) => { a.style.height = originalHeights[i]; });
+        window.removeEventListener('afterprint', restore);
       };
+      window.addEventListener('afterprint', restore);
       
-      html2pdf().set(opt).from(element).save()
-        .catch((err) => {
-          console.error('PDF export failed', err);
-          alert('PDF export failed — please try again.');
-        })
-        .finally(() => {
-          document.body.removeChild(element);
-        });
+      window.print();
+      
+      // Some browsers don't fire 'afterprint' reliably — restore shortly
+      // after as a fallback too.
+      setTimeout(restore, 1000);
     }
     
     function backToWeek() {
