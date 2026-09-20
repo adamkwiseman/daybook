@@ -300,7 +300,8 @@
       border-radius: 3px;
       font-family: inherit;
       font-size: 14px;
-      resize: vertical;
+      resize: none;
+      overflow: hidden;
       min-height: 50px;
     }
     
@@ -456,7 +457,7 @@
     <div class="daily-view active" id="dailyView">
       <div class="daily-header" id="dailyHeader"></div>
       <div style="background: #fffacd; border: 1px solid #f0e68c; border-radius: 4px; padding: 12px; margin-bottom: 20px;">
-        <textarea id="dailyNotes" placeholder="Type a note..." style="width: 100%; min-height: 80px; border: none; background: transparent; resize: vertical; font-size: 14px; padding: 0;" onchange="saveDailyNotes()"></textarea>
+        <textarea id="dailyNotes" placeholder="Type a note..." style="width: 100%; min-height: 80px; border: none; background: transparent; resize: none; overflow: hidden; font-size: 14px; padding: 0;" oninput="autoGrow(this)" onchange="saveDailyNotes()"></textarea>
       </div>
       <div id="periodsContainer"></div>
       <div class="controls">
@@ -803,6 +804,7 @@
       // Load daily notes
       const dayData = planData[dateStr] || {};
       document.getElementById('dailyNotes').value = dayData.dailyNotes || '';
+      autoGrow(document.getElementById('dailyNotes'));
       
       const ispGroup = getISPGroup(date);
       
@@ -868,29 +870,29 @@
               <div class="tab-content active" data-tab="plan">
                 <div class="field-group">
                   <div class="field-label">Objective</div>
-                  <textarea placeholder="Learning objective..." onchange="savePeriodData('${dateStr}', ${period.num}, 'objective', this.value)">${entry.objective}</textarea>
+                  <textarea placeholder="Learning objective..." oninput="autoGrow(this)" onchange="savePeriodData('${dateStr}', ${period.num}, 'objective', this.value)">${entry.objective}</textarea>
                 </div>
                 <div class="field-group">
                   <div class="field-label">Activities</div>
-                  <textarea placeholder="What will students do?..." onchange="savePeriodData('${dateStr}', ${period.num}, 'activities', this.value)">${entry.activities}</textarea>
+                  <textarea placeholder="What will students do?..." oninput="autoGrow(this)" onchange="savePeriodData('${dateStr}', ${period.num}, 'activities', this.value)">${entry.activities}</textarea>
                 </div>
                 <div class="field-group">
                   <div class="field-label">Resources & Links</div>
-                  <textarea placeholder="Links to resources, documents, etc...." onchange="savePeriodData('${dateStr}', ${period.num}, 'resources', this.value)">${entry.resources}</textarea>
+                  <textarea placeholder="Links to resources, documents, etc...." oninput="autoGrow(this)" onchange="savePeriodData('${dateStr}', ${period.num}, 'resources', this.value)">${entry.resources}</textarea>
                 </div>
               </div>
               
               <div class="tab-content" data-tab="prep">
                 <div class="field-group">
                   <div class="field-label">Prep Notes</div>
-                  <textarea placeholder="Materials to gather, copies needed, setup notes..." onchange="savePeriodData('${dateStr}', ${period.num}, 'prepNotes', this.value)">${entry.prepNotes}</textarea>
+                  <textarea placeholder="Materials to gather, copies needed, setup notes..." oninput="autoGrow(this)" onchange="savePeriodData('${dateStr}', ${period.num}, 'prepNotes', this.value)">${entry.prepNotes}</textarea>
                 </div>
               </div>
               
               <div class="tab-content" data-tab="reflect">
                 <div class="field-group">
                   <div class="field-label">Reflection</div>
-                  <textarea placeholder="What worked? What to adjust? Student responses?" onchange="savePeriodData('${dateStr}', ${period.num}, 'reflection', this.value)">${entry.reflection}</textarea>
+                  <textarea placeholder="What worked? What to adjust? Student responses?" oninput="autoGrow(this)" onchange="savePeriodData('${dateStr}', ${period.num}, 'reflection', this.value)">${entry.reflection}</textarea>
                 </div>
               </div>
             </div>
@@ -899,6 +901,10 @@
         
         container.appendChild(block);
       }
+      
+      // Size every textarea to fit its existing saved content right away
+      // (oninput only fires on future keystrokes, not on initial load)
+      container.querySelectorAll('textarea').forEach(autoGrow);
       
       renderWeek();
     }
@@ -917,12 +923,23 @@
       container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
-      container.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      const target = container.querySelector(`[data-tab="${tab}"]`);
+      target.classList.add('active');
+      // Hidden (display:none) textareas report 0 scrollHeight, so re-measure
+      // now that this tab is actually visible.
+      target.querySelectorAll('textarea').forEach(autoGrow);
     }
     
     function savePeriodData(dateStr, period, field, value) {
       getPlanEntry(dateStr, period)[field] = value;
       savePlanData();
+    }
+    
+    // Grows a textarea to fit its content, so the box never shows an
+    // internal scrollbar — what you see while typing is what prints.
+    function autoGrow(el) {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
     }
     
     function exportPDF() {
@@ -931,24 +948,35 @@
         return;
       }
       
-      // Auto-expand every textarea so full content prints instead of being
-      // clipped by its on-screen scrollable box height.
-      const areas = document.querySelectorAll('#dailyView textarea');
-      const originalHeights = [];
-      areas.forEach((a) => {
-        originalHeights.push(a.style.height);
-        a.style.height = 'auto';
-        a.style.height = (a.scrollHeight + 4) + 'px';
-      });
+      const container = document.getElementById('periodsContainer');
       
-      const restore = () => {
-        areas.forEach((a, i) => { a.style.height = originalHeights[i]; });
-        window.removeEventListener('afterprint', restore);
-      };
-      window.addEventListener('afterprint', restore);
+      // Hidden (display:none) elements report 0 scrollHeight, so force every
+      // period and every tab genuinely open before measuring — otherwise
+      // collapsed content bakes in a wrong (tiny) height even once the print
+      // stylesheet makes it visible again.
+      container.querySelectorAll('.period-content').forEach(pc => pc.classList.add('active'));
+      container.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('active'));
+      container.querySelectorAll('textarea').forEach(autoGrow);
+      autoGrow(document.getElementById('dailyNotes'));
       
       window.print();
       
+      const restore = () => {
+        // Collapse everything back to the normal on-screen default
+        container.querySelectorAll('.period-content').forEach(pc => pc.classList.remove('active'));
+        container.querySelectorAll('.period-block').forEach(b => b.classList.remove('expanded'));
+        container.querySelectorAll('.arrow').forEach(a => { a.textContent = '▼'; });
+        container.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        container.querySelectorAll('.period-block').forEach((block) => {
+          const planBtn = block.querySelector('.tab-btn');
+          const planContent = block.querySelector('[data-tab="plan"]');
+          if (planBtn) planBtn.classList.add('active');
+          if (planContent) planContent.classList.add('active');
+        });
+        window.removeEventListener('afterprint', restore);
+      };
+      window.addEventListener('afterprint', restore);
       // Some browsers don't fire 'afterprint' reliably — restore shortly
       // after as a fallback too.
       setTimeout(restore, 1000);
