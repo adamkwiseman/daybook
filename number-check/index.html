@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Show the Number</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one working screen per step (blocks, cards, equation) with the target number pinned on the left; teacher dashboard is a wide table plus a detail card. */
+:root{
+  --paper:#F4F7FB; --card:#FFFFFF; --ink:#18233A; --muted:#5A6782; --line:#D9E1EC;
+  --block:#4F7BE8; --block-dark:#2D4FA8; --block-hi:#8FAEF5;
+  --hun:#4CAF50; --hun-tint:#DCF2D6; --ten:#E8B820; --ten-tint:#FDF1BF; --one:#E0544E; --one-tint:#FADAD8;
+  --accent:#2F5BEA; --accent-soft:#E6ECFD; --good:#1E9E5A; --good-soft:#E3F6EC; --warn:#B7791F; --warn-soft:#FDF2DC; --bad:#D04040; --bad-soft:#FBE6E6;
+  --ui:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1522; --card:#172036; --ink:#E8EDF7; --muted:#9AA7C2; --line:#2A3650;
+  --block:#6F94F2; --block-dark:#3C5FBF; --block-hi:#A9C0F8;
+  --hun-tint:#1E3A22; --ten-tint:#3A3214; --one-tint:#3E1F1E;
+  --accent:#7C9BFF; --accent-soft:#1E2A4D; --good:#4CD38A; --good-soft:#153126; --warn:#E8B04A; --warn-soft:#33270F; --bad:#FF7A7A; --bad-soft:#3A1A1E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F1522; --card:#172036; --ink:#E8EDF7; --muted:#9AA7C2; --line:#2A3650;
+  --block:#6F94F2; --block-dark:#3C5FBF; --block-hi:#A9C0F8;
+  --hun-tint:#1E3A22; --ten-tint:#3A3214; --one-tint:#3E1F1E;
+  --accent:#7C9BFF; --accent-soft:#1E2A4D; --good:#4CD38A; --good-soft:#153126; --warn:#E8B04A; --warn-soft:#33270F; --bad:#FF7A7A; --bad-soft:#3A1A1E; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:17px;line-height:1.45;padding-inline:16px;padding-block:20px 40px}
+[hidden]{display:none!important}
+h1,h2,h3{margin:0;line-height:1.2;text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:860px;margin-inline:auto;display:grid;gap:18px}
+.wrap.wide{max-width:1120px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:grid;gap:18px}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.muted{color:var(--muted)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.field{display:grid;gap:6px}.field label{font-weight:700}
+input[type=text],input[type=password],select{font:inherit;font-size:20px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);width:100%}
+.btn{border:0;border-radius:14px;padding:13px 22px;font-weight:700;font-size:18px;background:var(--accent);color:#fff;display:inline-flex;align-items:center;gap:8px}
+.btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--line)}
+.btn.small{padding:8px 14px;font-size:15px;border-radius:10px}
+.btn.bad{background:var(--bad)}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:15px;padding:4px}
+.notice{background:var(--warn-soft);border-radius:14px;padding:12px 16px;font-size:15px}
+/* brand */
+.brand{display:flex;gap:10px;align-items:center}
+.ac{display:inline-flex;align-items:center;height:34px;padding:0 22px 0 12px;font-weight:700;font-size:20px;color:#1a1a1a;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%)}
+.ac.h{background:var(--hun)}.ac.t{background:var(--ten)}.ac.o{background:var(--one)}
+/* test layout */
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.target{display:flex;align-items:center;gap:14px}
+.target .num{font-size:64px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink)}
+.steps{display:flex;gap:6px}
+.steps span{font-size:14px;font-weight:700;padding:6px 12px;border-radius:999px;background:var(--paper);color:var(--muted)}
+.steps span.on{background:var(--accent);color:#fff}
+.steps span.done{background:var(--good-soft);color:var(--good)}
+.prog{height:8px;background:var(--line);border-radius:6px;overflow:hidden}.prog i{display:block;height:100%;background:var(--good);transition:width .3s}
+.task{font-size:20px;font-weight:700}
+/* drag + drop */
+.bank{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--paper);border-radius:16px;padding:14px}
+.bank .lbl{font-size:13px;color:var(--muted);font-weight:700;text-align:center;margin-top:4px}
+.src{display:grid;justify-items:center;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:6px;border-radius:12px}
+.src:hover{background:var(--accent-soft)}
+.mat{min-height:250px;border:3px dashed var(--line);border-radius:18px;background:var(--card);padding:14px;display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;transition:border-color .15s,background .15s}
+.mat.over{border-color:var(--accent);background:var(--accent-soft)}
+.mat .empty{color:var(--muted);margin:auto;text-align:center;font-size:16px}
+.group{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;max-width:100%}
+.group.units{display:grid;grid-template-columns:repeat(2,auto);gap:5px}
+.placed{cursor:pointer;touch-action:none;border-radius:4px}
+.placed:hover{outline:2px solid var(--bad);outline-offset:2px}
+.dragghost{position:fixed;pointer-events:none;z-index:50;opacity:.9;transform:translate(-50%,-50%) scale(1.05);filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
+.hint{font-size:14px;color:var(--muted)}
+/* arrow cards */
+.acard{display:inline-flex;align-items:center;height:52px;padding:0 30px 0 14px;font-weight:700;font-size:26px;color:#1a1a1a;clip-path:polygon(0 0,calc(100% - 20px) 0,100% 50%,calc(100% - 20px) 100%,0 100%);font-variant-numeric:tabular-nums}
+.acard.h{background:var(--hun);min-width:150px}.acard.t{background:var(--ten);min-width:108px}.acard.o{background:var(--one);min-width:66px}
+.cardbank{display:grid;gap:10px;background:var(--paper);border-radius:16px;padding:14px}
+.cardbank .rowc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cardbank .acard{height:44px;font-size:21px;padding:0 24px 0 10px;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 50%,calc(100% - 16px) 100%,0 100%)}
+.cardbank .acard.h{min-width:110px}.cardbank .acard.t{min-width:72px}.cardbank .acard.o{min-width:46px}
+.cardbank .used{opacity:.25;pointer-events:none}
+.cardmat{min-height:120px;align-items:center}
+/* equation */
+.eq{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:40px;font-weight:700}
+.eq input{width:130px;font:inherit;font-size:36px;text-align:center;padding:8px;border:3px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink)}
+.eq input:focus{border-color:var(--accent)}
+.navrow{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.inline-warn{color:var(--warn);font-weight:700;font-size:15px}
+/* example */
+.ex3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.ex3>div{background:var(--paper);border-radius:14px;padding:14px;display:grid;gap:10px;align-content:start}
+/* teacher */
+.tbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:28px;font-variant-numeric:tabular-nums}.stat span{font-size:14px;color:var(--muted)}
+.tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:16px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:760px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+tbody.click tr{cursor:pointer} tbody.click tr:hover,tr.sel{background:var(--accent-soft)}
+td.num{font-variant-numeric:tabular-nums;font-weight:700}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:700;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.mute{background:var(--paper);color:var(--muted)}
+.confirm{background:var(--bad-soft);border-radius:12px;padding:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+@media (max-width:560px){.target .num{font-size:48px}.eq{font-size:30px}.eq input{width:96px;font-size:28px}.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ===== HOME ===== -->
+<main class="wrap" id="v-home">
+  <section class="card">
+    <div class="brand"><span class="ac h">100</span><span class="ac t">50</span><span class="ac o">8</span></div>
+    <div><p class="eyebrow">Number sense check</p><h1 style="font-size:34px">Show the Number</h1></div>
+    <p class="muted">You will see 8 numbers. Show each number 3 ways: with base ten blocks, with arrow cards, and with an equation.</p>
+    <form id="startForm" style="display:grid;gap:14px">
+      <div class="field"><label for="stuName">Your name</label><input type="text" id="stuName" maxlength="40" autocomplete="off" placeholder="First name or student code" required></div>
+      <div class="field"><label for="stuGroup">Your group</label><select id="stuGroup"><option>Group 1</option><option>Group 2</option><option>Group 3</option><option>Other</option></select></div>
+      <div><button class="btn" type="submit">Start</button></div>
+    </form>
+  </section>
+  <div style="text-align:center"><button class="link" id="teacherLink" type="button">Teacher results</button></div>
+</main>
+
+<!-- ===== EXAMPLE ===== -->
+<main class="wrap" id="v-example" hidden>
+  <section class="card">
+    <div><p class="eyebrow">How it works</p><h2>Here is 158 shown 3 ways</h2></div>
+    <div class="ex3">
+      <div><b>1. Base ten blocks</b><div id="exBlocks" class="group" style="gap:8px"></div><p class="hint">Drag blocks onto the mat. Tap a block on the mat to take it away.</p></div>
+      <div><b>2. Arrow cards</b><div class="row" style="gap:6px"><span class="acard h">100</span><span class="acard t">50</span><span class="acard o">8</span></div><p class="hint">Drag the cards you need onto the mat.</p></div>
+      <div><b>3. Equation</b><div class="eq" style="font-size:24px;gap:6px">100 + 50 + 8 = 158</div><p class="hint">Type a number in each box.</p></div>
+    </div>
+    <div><button class="btn" id="goTest" type="button">I'm ready</button></div>
+  </section>
+</main>
+
+<!-- ===== QUESTION ===== -->
+<main class="wrap" id="v-q" hidden>
+  <section class="card">
+    <div class="prog"><i id="progBar"></i></div>
+    <div class="qhead">
+      <div class="target"><span class="eyebrow" id="qCount">Number 1 of 8</span><span class="num" id="qNum">46</span></div>
+      <div class="steps"><span id="st-A">1 Blocks</span><span id="st-B">2 Cards</span><span id="st-C">3 Equation</span></div>
+    </div>
+
+    <!-- Step A -->
+    <div id="stepA" style="display:grid;gap:12px">
+      <p class="task">Show <span class="qn"></span> with base ten blocks.</p>
+      <div class="bank" id="blockBank"></div>
+      <div class="mat" id="blockMat" aria-label="Block mat"></div>
+      <p class="hint">Drag a block (or tap it) to add it. Tap a block on the mat to take it away.</p>
+    </div>
+    <!-- Step B -->
+    <div id="stepB" style="display:grid;gap:12px" hidden>
+      <p class="task">Show <span class="qn"></span> with arrow cards.</p>
+      <div class="cardbank" id="cardBank"></div>
+      <div class="mat cardmat" id="cardMat" aria-label="Arrow card mat"></div>
+      <p class="hint">Drag a card (or tap it) to add it. Tap a card on the mat to put it back.</p>
+    </div>
+    <!-- Step C -->
+    <div id="stepC" style="display:grid;gap:12px" hidden>
+      <p class="task">Write the equation for <span class="qn"></span>.</p>
+      <div class="eq" id="eqRow"></div>
+    </div>
+
+    <div class="navrow">
+      <button class="btn ghost" id="backBtn" type="button">Back</button>
+      <span class="inline-warn" id="emptyWarn"></span>
+      <button class="btn" id="nextBtn" type="button">Next</button>
+    </div>
+  </section>
+</main>
+
+<!-- ===== DONE ===== -->
+<main class="wrap" id="v-done" hidden>
+  <section class="card" style="text-align:center">
+    <div class="brand" style="justify-content:center"><span class="ac h">All</span><span class="ac t">done</span><span class="ac o">!</span></div>
+    <h2>Great work!</h2>
+    <p class="muted" id="doneMsg">Saving your answers…</p>
+    <div><button class="btn ghost" id="homeBtn" type="button">Back to start</button></div>
+  </section>
+</main>
+
+<!-- ===== TEACHER LOGIN ===== -->
+<main class="wrap" id="v-tlogin" hidden>
+  <section class="card">
+    <div><p class="eyebrow">Teacher</p><h2>Results</h2></div>
+    <div id="loginLocal" style="display:grid;gap:12px">
+      <div class="field"><label for="pin">Teacher PIN</label><input type="password" id="pin" inputmode="numeric" autocomplete="off"></div>
+      <div class="row"><button class="btn" id="pinBtn" type="button">Open results</button><span id="pinMsg" style="color:var(--bad);font-weight:700"></span></div>
+    </div>
+    <div id="loginFire" hidden style="display:grid;gap:12px">
+      <p class="muted">Sign in with the Google account named in your Firestore rules.</p>
+      <div class="row"><button class="btn" id="googleBtn" type="button">Sign in with Google</button><span id="gMsg" style="color:var(--bad);font-weight:700"></span></div>
+    </div>
+    <div><button class="link" id="backHome" type="button">Back to student start</button></div>
+  </section>
+</main>
+
+<!-- ===== TEACHER DASHBOARD ===== -->
+<main class="wrap wide" id="v-teacher" hidden>
+  <div class="tbar">
+    <div><p class="eyebrow">Teacher results</p><h1>Show the Number</h1></div>
+    <div class="row">
+      <button class="btn small ghost" id="refreshBtn" type="button">Refresh</button>
+      <button class="btn small ghost" id="csvBtn" type="button">Download CSV</button>
+      <button class="btn small ghost" id="closeBtn" type="button">Close</button>
+    </div>
+  </div>
+  <p class="notice" id="localNotice" hidden>Local mode: results are saved on this computer only.</p>
+  <div class="stats" id="stats"></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Student</th><th>Group</th><th>Date</th><th>Total</th><th>Blocks</th><th>Cards</th><th>Equation</th><th>Watch for</th></tr></thead>
+    <tbody id="tbody" class="click"></tbody>
+  </table></div>
+  <p class="muted" id="emptyMsg" hidden>No tests yet. Results appear here when a student finishes.</p>
+  <section class="card" id="detail" hidden></section>
+</main>
+
+<script>
+/* ===== SETTINGS ===== */
+const CONFIG = {
+  firebase: {                    // the daybook's Firebase project
+    apiKey: "AIzaSyAlvTecXVHkoR7CZBMZ7rBwP47bN8ynkK0",
+    authDomain: "daybook-3c39c.firebaseapp.com",
+    projectId: "daybook-3c39c",
+    storageBucket: "daybook-3c39c.firebasestorage.app",
+    messagingSenderId: "673483245849",
+    appId: "1:673483245849:web:9101a11007bc527501dd88"
+  },
+  collection: 'numberAttempts',
+  teacherPin: '2468',           // local mode only
+  maxNumber: 199                // largest number a student can get (keep under 1000)
+};
+
+/* ===== NUMBERS: each student gets a fresh set ===== */
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+function makeSet(){
+  const maxH = Math.floor(CONFIG.maxNumber / 100);
+  const used = new Set(); const pick = f => { let n, g = 0; do { n = f(); g++; } while(used.has(n) && g < 50); used.add(n); return n; };
+  const H = () => rnd(1, Math.max(1, maxH));
+  const list = [
+    pick(() => rnd(2,9)*10 + rnd(1,9)), pick(() => rnd(2,9)*10 + rnd(1,9)),   // 2-digit
+    pick(() => rnd(11,19)),                                                   // teen
+    pick(() => rnd(2,9)*10),                                                  // decade (ones = 0)
+    pick(() => H()*100 + rnd(1,9)*10 + rnd(1,9)), pick(() => H()*100 + rnd(1,9)*10 + rnd(1,9)), // 3-digit
+    pick(() => H()*100 + rnd(1,9)),                                           // zero tens
+    pick(() => H()*100 + rnd(1,9)*10)                                         // zero ones
+  ].filter(n => n <= CONFIG.maxNumber);
+  return shuffle(list);
+}
+const parts = n => ({ h: Math.floor(n/100), t: Math.floor(n%100/10), o: n%10 });
+
+/* ===== HELPERS ===== */
+const $ = s => document.querySelector(s);
+const VIEWS = ['v-home','v-example','v-q','v-done','v-tlogin','v-teacher'];
+function show(id){ VIEWS.forEach(v => $('#'+v).hidden = v !== id); window.scrollTo(0,0); }
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('load '+src)); document.head.appendChild(s); }); }
+async function retry(fn, n=3){ let e; for(let i=0;i<n;i++){ try{ return await fn(); }catch(x){ e=x; await new Promise(r=>setTimeout(r,800*(i+1))); } } throw e; }
+
+/* ===== BLOCK + CARD DRAWINGS ===== */
+function blockSVG(type, scale=1){
+  const u = 11*scale; // size of one small cube
+  const css = 'fill:var(--block);stroke:var(--block-dark);stroke-width:1';
+  if(type === 'o') return `<svg width="${u}" height="${u}" viewBox="0 0 ${u} ${u}" aria-label="one"><rect x=".5" y=".5" width="${u-1}" height="${u-1}" rx="1.5" style="${css}"/></svg>`;
+  if(type === 't'){ let l=''; for(let i=1;i<10;i++) l+=`<line x1="1" x2="${u-1}" y1="${i*u}" y2="${i*u}" style="stroke:var(--block-dark);stroke-width:.8"/>`;
+    return `<svg width="${u}" height="${u*10}" viewBox="0 0 ${u} ${u*10}" aria-label="ten"><rect x=".5" y=".5" width="${u-1}" height="${u*10-1}" rx="1.5" style="${css}"/>${l}</svg>`; }
+  let l=''; for(let i=1;i<10;i++){ l+=`<line x1="${i*u}" x2="${i*u}" y1="1" y2="${u*10-1}" style="stroke:var(--block-dark);stroke-width:.8"/><line y1="${i*u}" y2="${i*u}" x1="1" x2="${u*10-1}" style="stroke:var(--block-dark);stroke-width:.8"/>`; }
+  return `<svg width="${u*10}" height="${u*10}" viewBox="0 0 ${u*10} ${u*10}" aria-label="hundred"><rect x=".5" y=".5" width="${u*10-1}" height="${u*10-1}" rx="2" style="${css}"/>${l}</svg>`;
+}
+const placeOf = v => v >= 100 ? 'h' : v >= 10 ? 't' : 'o';
+
+/* ===== STORAGE ===== */
+const LocalStore = {
+  kind:'local', key:'numberCheckAttempts',
+  _all(){ try{ return JSON.parse(localStorage.getItem(this.key) || '[]'); }catch(e){ return []; } },
+  _save(a){ try{ localStorage.setItem(this.key, JSON.stringify(a)); }catch(e){} },
+  async create(r){ const a=this._all(); a.push(r); this._save(a); },
+  async update(id,p){ const a=this._all(); const i=a.findIndex(x=>x.id===id); if(i>=0){ Object.assign(a[i],p); this._save(a); } },
+  async list(){ return this._all().sort((x,y)=>y.createdAt-x.createdAt); },
+  async remove(id){ this._save(this._all().filter(x=>x.id!==id)); }
+};
+const FireStore = {
+  kind:'firebase', fs:null, auth:null,
+  async init(){ const b='https://cdn.jsdelivr.net/npm/firebase@10.14.1/'; await loadScript(b+'firebase-app-compat.js'); await loadScript(b+'firebase-auth-compat.js'); await loadScript(b+'firebase-firestore-compat.js');
+    if(!firebase.apps.length) firebase.initializeApp(CONFIG.firebase); this.fs=firebase.firestore(); this.auth=firebase.auth(); },
+  col(){ return this.fs.collection(CONFIG.collection); },
+  async create(r){ await this.col().doc(r.id).set(r); },
+  async update(id,p){ await this.col().doc(id).update(p); },
+  async list(){ const q=await this.col().orderBy('createdAt','desc').get(); return q.docs.map(d=>d.data()); },
+  async remove(id){ await this.col().doc(id).delete(); }
+};
+let store = LocalStore;
+const storeReady = (async()=>{ if(CONFIG.firebase){ try{ await FireStore.init(); store = FireStore; }catch(e){ console.error(e); } } })();
+
+/* ===== SCORING ===== */
+function scoreItem(it){
+  const { h, t, o } = parts(it.n);
+  const b = it.blocks || {h:0,t:0,o:0};
+  const A = (b.h===h && b.t===t && b.o===o) ? 'ok' : (b.h*100 + b.t*10 + b.o === it.n ? 'regroup' : 'no');
+  const want = [h*100, t*10, o].filter(v=>v>0).sort((x,y)=>y-x);
+  const got = (it.cards||[]).filter(v=>v>0).slice().sort((x,y)=>y-x);
+  let B = 'no';
+  if(want.length===got.length && want.every((v,i)=>v===got[i])) B = 'ok';
+  else if(digitErr(h, t, got)) B = 'digit';
+  else if(got.reduce((s,v)=>s+v,0) === it.n) B = 'sum';
+  const eq = (it.eq||[]).map(x => parseInt(x,10)).filter(x=>!isNaN(x));
+  const eqNZ = eq.filter(v=>v>0).sort((x,y)=>y-x);
+  let C = 'no';
+  if(want.length===eqNZ.length && want.every((v,i)=>v===eqNZ[i])) C = 'ok';
+  else if(digitErr(h, t, eq)) C = 'digit';
+  else if(eq.length && eq.reduce((s,v)=>s+v,0) === it.n) C = 'sum';
+  return { A, B, C };
+}
+// A digit used where its place value belongs (3 instead of 30, 1 or 10 instead of 100).
+function digitErr(h, t, vals){
+  return (t > 0 && !vals.includes(t*10) && vals.includes(t)) || (h > 0 && !vals.includes(h*100) && (vals.includes(h) || vals.includes(h*10)));
+}
+const pts = r => (r === 'ok' || r === 'regroup') ? 1 : 0;
+
+/* ===== STUDENT FLOW ===== */
+let att = null, qi = 0, step = 'A', pending = [], saveErr = 0;
+let mat = {h:0,t:0,o:0}, cards = [], eqVals = [];
+function track(p){ const q = p.catch(e=>{ console.error(e); saveErr++; }); pending.push(q); return q; }
+
+$('#startForm').addEventListener('submit', async e => {
+  e.preventDefault(); const name = $('#stuName').value.trim(); if(!name) return;
+  await storeReady;
+  const nums = makeSet();
+  att = { id: uid(), name, group: $('#stuGroup').value, createdAt: Date.now(), status:'in_progress', items: nums.map(n => ({ n })) };
+  pending = []; saveErr = 0;
+  track(retry(()=>store.create(att)));
+  const ex = $('#exBlocks'); ex.innerHTML = blockSVG('h',.75) + '<div class="group">' + blockSVG('t',.75).repeat(5) + '</div><div class="group units">' + blockSVG('o',.75).repeat(8) + '</div>';
+  show('v-example');
+});
+$('#goTest').onclick = () => { qi = 0; startItem(); show('v-q'); };
+
+function startItem(){
+  const it = att.items[qi];
+  mat = Object.assign({h:0,t:0,o:0}, it.blocks || {}); cards = (it.cards || []).slice(); eqVals = (it.eq || []).slice();
+  it.started = it.started || Date.now();
+  document.querySelectorAll('.qn').forEach(e => e.textContent = it.n);
+  $('#qNum').textContent = it.n;
+  $('#qCount').textContent = 'Number ' + (qi+1) + ' of ' + att.items.length;
+  $('#progBar').style.width = (qi / att.items.length * 100) + '%';
+  setStep('A');
+}
+function setStep(s){
+  step = s; $('#emptyWarn').textContent = ''; warned = false;
+  ['A','B','C'].forEach(k => { $('#step'+k).hidden = k !== s; const st = $('#st-'+k); st.className = k===s ? 'on' : ('ABC'.indexOf(k) < 'ABC'.indexOf(s) ? 'done' : ''); });
+  $('#backBtn').style.visibility = (s === 'A') ? 'hidden' : 'visible';
+  $('#nextBtn').textContent = s === 'C' ? (qi === att.items.length-1 ? 'Finish' : 'Next number') : 'Next';
+  if(s === 'A') renderBlocks();
+  if(s === 'B') renderCards();
+  if(s === 'C') renderEq();
+}
+
+/* --- Step A: blocks --- */
+function renderBlocks(){
+  const bank = $('#blockBank'); bank.innerHTML = '';
+  [['h','hundred'],['t','ten'],['o','one']].forEach(([k,l]) => {
+    const d = document.createElement('div'); d.className = 'src'; d.innerHTML = blockSVG(k) + `<div class="lbl">${l}</div>`;
+    makeDraggable(d, () => blockSVG(k), $('#blockMat'), () => { mat[k]++; drawMat(); });
+    bank.appendChild(d);
+  });
+  drawMat();
+}
+function drawMat(){
+  const m = $('#blockMat'); m.innerHTML = '';
+  if(!mat.h && !mat.t && !mat.o){ m.innerHTML = '<p class="empty">Drag blocks here</p>'; return; }
+  const mk = (k) => { const g = document.createElement('div'); g.className = 'group' + (k === 'o' ? ' units' : '');
+    for(let i=0;i<mat[k];i++){ const b = document.createElement('span'); b.className='placed'; b.innerHTML = blockSVG(k); b.title='Tap to take away'; b.onclick = () => { mat[k]--; drawMat(); }; g.appendChild(b); }
+    return g; };
+  if(mat.h) m.appendChild(mk('h')); if(mat.t) m.appendChild(mk('t')); if(mat.o) m.appendChild(mk('o'));
+}
+
+/* --- Step B: arrow cards --- */
+function cardEl(v, cls){ const s = document.createElement('span'); s.className = 'acard ' + placeOf(v) + (cls ? ' ' + cls : ''); s.textContent = v; return s; }
+function renderCards(){
+  const bank = $('#cardBank'); bank.innerHTML = '';
+  const maxH = Math.max(1, Math.floor(CONFIG.maxNumber/100));
+  const rows = [Array.from({length:maxH},(_,i)=>(i+1)*100), [10,20,30,40,50,60,70,80,90], [1,2,3,4,5,6,7,8,9]];
+  rows.forEach(r => {
+    const row = document.createElement('div'); row.className = 'rowc';
+    r.forEach(v => {
+      const wrap = document.createElement('div'); wrap.className = 'src' + (cards.includes(v) ? ' used' : ''); wrap.style.padding = '2px';
+      wrap.appendChild(cardEl(v));
+      makeDraggable(wrap, () => cardEl(v).outerHTML, $('#cardMat'), () => { if(!cards.includes(v)){ cards.push(v); renderCards(); } });
+      row.appendChild(wrap);
+    });
+    bank.appendChild(row);
+  });
+  const m = $('#cardMat'); m.innerHTML = '';
+  if(!cards.length){ m.innerHTML = '<p class="empty">Drag arrow cards here</p>'; return; }
+  cards.slice().sort((a,b)=>b-a).forEach(v => { const c = cardEl(v, 'placed'); c.title='Tap to put back'; c.onclick = () => { cards = cards.filter(x=>x!==v); renderCards(); }; m.appendChild(c); });
+}
+
+/* --- Step C: equation --- */
+function renderEq(){
+  const n = att.items[qi].n; const k = n >= 100 ? 3 : 2;
+  const row = $('#eqRow'); row.innerHTML = '';
+  for(let i=0;i<k;i++){
+    const inp = document.createElement('input'); inp.type='text'; inp.inputMode='numeric'; inp.maxLength=3; inp.id='eq'+i; inp.setAttribute('aria-label','part '+(i+1));
+    inp.value = eqVals[i] ?? ''; inp.oninput = () => { inp.value = inp.value.replace(/\D/g,''); eqVals[i] = inp.value; };
+    row.appendChild(inp);
+    if(i < k-1){ const p = document.createElement('span'); p.textContent = '+'; row.appendChild(p); }
+  }
+  const eqs = document.createElement('span'); eqs.textContent = '= ' + n; row.appendChild(eqs);
+  setTimeout(()=>{ const f = $('#eq0'); if(f) f.focus(); }, 50);
+}
+
+/* --- drag engine (mouse, touch, pen) --- */
+function makeDraggable(src, ghostHTML, target, onDrop){
+  src.addEventListener('pointerdown', e => {
+    if(e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    const sx = e.clientX, sy = e.clientY; let moved = false, ghost = null;
+    const move = ev => {
+      if(!moved && Math.hypot(ev.clientX-sx, ev.clientY-sy) > 6){ moved = true; ghost = document.createElement('div'); ghost.className='dragghost'; ghost.innerHTML = ghostHTML(); document.body.appendChild(ghost); }
+      if(ghost){ ghost.style.left = ev.clientX+'px'; ghost.style.top = ev.clientY+'px'; target.classList.toggle('over', inside(target, ev)); }
+    };
+    const up = ev => {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+      target.classList.remove('over');
+      if(ghost){ ghost.remove(); if(inside(target, ev)) onDrop(); } else onDrop(); // a tap also adds
+    };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  });
+}
+function inside(el, ev){ const r = el.getBoundingClientRect(); return ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom; }
+
+/* --- navigation --- */
+let warned = false;
+function saveStep(){ const it = att.items[qi]; it.blocks = Object.assign({}, mat); it.cards = cards.slice(); it.eq = eqVals.slice(); }
+$('#nextBtn').onclick = () => {
+  const empty = (step==='A' && !mat.h && !mat.t && !mat.o) || (step==='B' && !cards.length) || (step==='C' && !eqVals.some(v=>v));
+  if(empty && !warned){ warned = true; $('#emptyWarn').textContent = "You haven't answered yet. Tap Next again to skip."; return; }
+  saveStep();
+  if(step === 'A') return setStep('B');
+  if(step === 'B') return setStep('C');
+  const it = att.items[qi]; it.secs = Math.round((Date.now() - it.started)/1000); delete it.started;
+  Object.assign(it, { score: scoreItem(it) });
+  track(retry(()=>store.update(att.id, { items: att.items.map(clean) })));
+  qi++;
+  if(qi < att.items.length) startItem(); else finish();
+};
+$('#backBtn').onclick = () => { saveStep(); if(step === 'B') setStep('A'); else if(step === 'C') setStep('B'); };
+function clean(it){ const o = {}; for(const k of Object.keys(it)) if(it[k] !== undefined) o[k] = it[k]; return o; }
+async function finish(){
+  $('#progBar').style.width = '100%'; show('v-done'); $('#doneMsg').textContent = 'Saving your answers…';
+  await Promise.all(pending);
+  try{ await retry(()=>store.update(att.id, { status:'done', finishedAt: Date.now() })); }catch(e){ saveErr++; }
+  $('#doneMsg').textContent = saveErr ? 'Some answers did not save. Please tell your teacher.' : 'Your answers are saved.';
+}
+$('#homeBtn').onclick = () => { $('#stuName').value=''; att=null; show('v-home'); };
+
+/* ===== TEACHER ===== */
+let rows = [], selId = null;
+$('#teacherLink').onclick = async () => { await storeReady; show('v-tlogin'); const f = store.kind==='firebase'; $('#loginLocal').hidden=f; $('#loginFire').hidden=!f; if(f && store.auth.currentUser) openDash(); };
+$('#backHome').onclick = () => show('v-home');
+$('#pinBtn').onclick = () => { if($('#pin').value === CONFIG.teacherPin){ $('#pin').value=''; openDash(); } else $('#pinMsg').textContent='That PIN is not right.'; };
+$('#pin').addEventListener('keydown', e => { if(e.key==='Enter') $('#pinBtn').click(); });
+$('#googleBtn').onclick = async () => { try{ await store.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); openDash(); }catch(e){ $('#gMsg').textContent='Sign-in did not finish: '+(e.code||e.message); } };
+$('#closeBtn').onclick = async () => { if(store.kind==='firebase'){ try{ await store.auth.signOut(); }catch(e){} } show('v-home'); };
+$('#refreshBtn').onclick = () => load();
+async function openDash(){ show('v-teacher'); $('#localNotice').hidden = store.kind !== 'local'; await load(); }
+async function load(){
+  try{ rows = await store.list(); }
+  catch(e){ $('#stats').innerHTML = '<p class="notice">Could not read results ('+esc(e.code||e.message)+'). Check the teacher email in your Firestore rules.</p>'; rows=[]; $('#tbody').innerHTML=''; return; }
+  table(); if(selId && rows.find(r=>r.id===selId)) detail(selId); else { $('#detail').hidden = true; selId = null; }
+}
+function sum(a){
+  const it = (a.items||[]).filter(x=>x.score);
+  const s = { A:0, B:0, C:0, n: it.length, digit:0, zero:0, regroup:0 };
+  it.forEach(x => { s.A += pts(x.score.A); s.B += pts(x.score.B); s.C += pts(x.score.C);
+    if(x.score.B==='digit' || x.score.C==='digit') s.digit++;
+    if(x.score.A==='regroup') s.regroup++;
+    const p = parts(x.n); if((p.t===0 || p.o===0) && [x.score.A,x.score.B,x.score.C].some(v=>v==='no')) s.zero++; });
+  s.total = s.A + s.B + s.C; return s;
+}
+function table(){
+  $('#emptyMsg').hidden = rows.length > 0;
+  const done = rows.filter(r=>r.status==='done'); const ss = done.map(sum);
+  const avg = k => ss.length ? (ss.reduce((t,x)=>t+x[k],0)/ss.length).toFixed(1) : '–';
+  const digitKids = ss.filter(x=>x.digit).length, zeroKids = ss.filter(x=>x.zero).length;
+  $('#stats').innerHTML = `<div class="stat"><b>${done.length}</b><span>finished tests</span></div><div class="stat"><b>${avg('total')}</b><span>average total (out of 24)</span></div>`+
+    `<div class="stat"><b>${avg('A')} · ${avg('B')} · ${avg('C')}</b><span>average blocks · cards · equation (out of 8)</span></div>`+
+    `<div class="stat"><b>${digitKids}</b><span>students writing digits, not values</span></div><div class="stat"><b>${zeroKids}</b><span>students missing a zero place</span></div>`;
+  const tb = $('#tbody'); tb.innerHTML = '';
+  rows.forEach(a => {
+    const s = sum(a); const d = new Date(a.createdAt); const tr = document.createElement('tr'); if(a.id===selId) tr.className='sel';
+    const flags = [s.digit ? `<span class="pill bad">digit, not value ×${s.digit}</span>` : '', s.zero ? `<span class="pill warn">zero place ×${s.zero}</span>` : '', s.regroup ? `<span class="pill mute">regrouped ×${s.regroup}</span>` : ''].join(' ') || '<span class="pill good">none</span>';
+    tr.innerHTML = `<td><b>${esc(a.name)}</b>${a.status==='done'?'':' <span class="pill mute">not finished</span>'}</td><td>${esc(a.group)}</td><td>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</td>`+
+      `<td class="num">${s.total} / ${s.n*3||24}</td><td class="num">${s.A} / ${s.n||8}</td><td class="num">${s.B} / ${s.n||8}</td><td class="num">${s.C} / ${s.n||8}</td><td>${flags}</td>`;
+    tr.onclick = () => { selId = a.id; table(); detail(a.id); $('#detail').scrollIntoView({behavior:'smooth'}); };
+    tb.appendChild(tr);
+  });
+}
+const LAB = { ok:['good','correct'], regroup:['warn','equal, regrouped'], digit:['bad','digit, not value'], sum:['warn','adds up, not place values'], no:['bad','incorrect'] };
+function pill(r){ const [c,l] = LAB[r] || ['mute','not done']; return `<span class="pill ${c}">${l}</span>`; }
+function detail(id){
+  const a = rows.find(r=>r.id===id); if(!a) return; const s = sum(a); const el = $('#detail'); el.hidden = false;
+  const trs = (a.items||[]).map((x,i) => {
+    const b = x.blocks || {h:0,t:0,o:0}; const sc = x.score || {};
+    const blocks = `${b.h} hundred${b.h===1?'':'s'}, ${b.t} ten${b.t===1?'':'s'}, ${b.o} one${b.o===1?'':'s'}`;
+    const cardsTxt = (x.cards||[]).length ? x.cards.slice().sort((p,q)=>q-p).join(' · ') : '–';
+    const eqTxt = (x.eq||[]).length ? (x.eq.map(v=>v||'□').join(' + ') + ' = ' + x.n) : '–';
+    return `<tr><td class="num">${i+1}</td><td class="num" style="font-size:20px">${x.n}</td><td>${blocks}<br>${pill(sc.A)}</td><td>${esc(cardsTxt)}<br>${pill(sc.B)}</td><td>${esc(eqTxt)}<br>${pill(sc.C)}</td><td class="num">${x.secs ? x.secs+'s' : ''}</td></tr>`;
+  }).join('');
+  el.innerHTML = `<div class="tbar"><div><p class="eyebrow">${esc(a.group)} · ${new Date(a.createdAt).toLocaleString()}</p><h2>${esc(a.name)}</h2></div>`+
+    `<div class="row"><span class="pill good">Total ${s.total} / ${s.n*3||24}</span><span class="pill mute">Blocks ${s.A} · Cards ${s.B} · Equation ${s.C}</span></div></div>`+
+    `<div class="tablewrap"><table><thead><tr><th>#</th><th>Number</th><th>Blocks built</th><th>Arrow cards</th><th>Equation</th><th>Time</th></tr></thead><tbody>${trs}</tbody></table></div>`+
+    `<p class="muted" style="font-size:14px">"Digit, not value" means the student used a digit where a place value belongs (for example a 3 card or a 3 in the equation instead of 30). "Equal, regrouped" means the blocks add up to the number but use more ones or tens than needed (for example 3 tens and 16 ones for 46); it still earns the point.</p>`+
+    `<div id="delZone"><button class="btn small ghost" id="delBtn" type="button">Delete this test</button></div>`;
+  $('#delBtn').onclick = () => {
+    $('#delZone').innerHTML = `<div class="confirm"><span>Delete <b>${esc(a.name)}</b>'s test for good?</span><button class="btn small bad" id="delYes" type="button">Delete</button><button class="btn small ghost" id="delNo" type="button">Keep it</button></div>`;
+    $('#delNo').onclick = () => detail(id);
+    $('#delYes').onclick = async () => { try{ await store.remove(id); selId=null; await load(); }catch(e){ $('#delZone').textContent='Could not delete: '+(e.code||e.message); } };
+  };
+}
+$('#csvBtn').onclick = () => {
+  const head = ['Student','Group','Date','Status','Total /24','Blocks /8','Cards /8','Equation /8','Digit-not-value','Zero-place errors'];
+  for(let i=1;i<=8;i++) head.push('Q'+i+' number','Q'+i+' blocks','Q'+i+' cards','Q'+i+' equation');
+  const lines = [head];
+  rows.forEach(a => { const s = sum(a); const r = [a.name, a.group, new Date(a.createdAt).toLocaleString(), a.status, s.total, s.A, s.B, s.C, s.digit, s.zero];
+    (a.items||[]).forEach(x => { const sc = x.score||{}; r.push(x.n, sc.A||'', sc.B||'', sc.C||''); }); lines.push(r); });
+  const csv = lines.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob(['﻿'+csv], {type:'text/csv'})); const l = document.createElement('a'); l.href=url; l.download='show-the-number.csv'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(()=>URL.revokeObjectURL(url),2000);
+};
+</script>
+</body>
+</html>
