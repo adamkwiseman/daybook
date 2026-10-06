@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Letter Patterns Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one calm centred card for students; a wide two-zone dashboard for the teacher. */
+:root{
+  --paper:#F5F8FC; --card:#FFFFFF; --ink:#18233A; --muted:#5A6782; --line:#DCE3EE;
+  --pattern:#FFE94D; --pattern-ink:#2A2400; --key:#2BB673; --accent:#2F5BEA; --accent-soft:#E6ECFD;
+  --good:#1E9E5A; --good-soft:#E3F6EC; --warn:#B7791F; --warn-soft:#FDF2DC; --bad:#D04040; --bad-soft:#FBE6E6;
+  --word:"Andika","Atkinson Hyperlegible",system-ui,sans-serif;
+  --ui:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1522; --card:#172036; --ink:#E8EDF7; --muted:#9AA7C2; --line:#28344D;
+  --pattern:#E5CF2E; --pattern-ink:#1F1A00; --key:#3CC983; --accent:#7C9BFF; --accent-soft:#1E2A4D;
+  --good:#4CD38A; --good-soft:#153126; --warn:#E8B04A; --warn-soft:#33270F; --bad:#FF7A7A; --bad-soft:#3A1A1E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F1522; --card:#172036; --ink:#E8EDF7; --muted:#9AA7C2; --line:#28344D;
+  --pattern:#E5CF2E; --pattern-ink:#1F1A00; --key:#3CC983; --accent:#7C9BFF; --accent-soft:#1E2A4D;
+  --good:#4CD38A; --good-soft:#153126; --warn:#E8B04A; --warn-soft:#33270F; --bad:#FF7A7A; --bad-soft:#3A1A1E; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:17px;line-height:1.5;padding-inline:16px;padding-block:24px 48px}
+[hidden]{display:none!important}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:760px;margin-inline:auto;display:grid;gap:20px}
+.wrap.wide{max-width:1120px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;display:grid;gap:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .chip{background:var(--pattern);color:var(--pattern-ink);font-family:var(--word);font-weight:700;border-radius:10px;padding:4px 12px;font-size:20px}
+.brand .chip.g{background:var(--key);color:#fff}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-size:34px}
+h2{font-size:26px}
+p{margin:0}
+.muted{color:var(--muted)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.field{display:grid;gap:6px}
+.field label{font-weight:700}
+input[type=text],input[type=password],select{font:inherit;font-size:20px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);width:100%}
+.btn{border:0;border-radius:14px;padding:14px 22px;font-weight:700;font-size:19px;background:var(--accent);color:#fff;display:inline-flex;align-items:center;gap:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--line)}
+.btn.small{padding:8px 14px;font-size:15px;border-radius:10px}
+.btn.good{background:var(--good)} .btn.bad{background:var(--bad)}
+.btn svg{width:22px;height:22px;flex:none}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:15px;padding:4px}
+.steps{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.step{background:var(--paper);border-radius:14px;padding:14px 16px;display:grid;gap:4px}
+.step b{font-size:18px}
+/* progress */
+.prog{display:grid;gap:6px}
+.prog .bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.prog .bar i{display:block;height:100%;background:var(--key);border-radius:6px;transition:width .3s}
+.prog .lbl{display:flex;justify-content:space-between;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* part 1 */
+.speaker{width:132px;height:132px;border-radius:50%;border:0;background:var(--accent);color:#fff;display:grid;place-items:center;margin-inline:auto;box-shadow:0 8px 0 color-mix(in srgb,var(--accent) 60%,#000 40%)}
+.speaker:active{transform:translateY(4px);box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000 40%)}
+.speaker svg{width:64px;height:64px}
+.speaker.playing{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.05)}}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.opt{border:3px solid var(--line);background:var(--card);border-radius:18px;padding:22px 8px;font-family:var(--word);font-size:44px;font-weight:700;color:var(--ink)}
+.opt:hover{border-color:var(--accent)}
+.opt.chosen{background:var(--pattern);color:var(--pattern-ink);border-color:var(--pattern)}
+.opt.right{background:var(--good-soft);border-color:var(--good)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.center{text-align:center}
+/* part 2 */
+.bigword{font-family:var(--word);font-weight:700;font-size:96px;line-height:1;text-align:center;background:var(--pattern);color:var(--pattern-ink);border-radius:24px;padding:36px 12px}
+.mic{width:120px;height:120px;border-radius:50%;border:0;background:var(--bad);color:#fff;display:grid;place-items:center;margin-inline:auto}
+.mic svg{width:56px;height:56px}
+.mic.on{animation:pulse 1s ease-in-out infinite}
+.meter{height:14px;background:var(--line);border-radius:8px;overflow:hidden;max-width:360px;width:100%;margin-inline:auto}
+.meter i{display:block;height:100%;width:0;background:var(--key);transition:width .08s}
+.status{text-align:center;font-weight:700;min-height:1.5em}
+/* teacher */
+.tbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.notice{background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);border-radius:14px;padding:12px 16px;font-size:15px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:30px;font-variant-numeric:tabular-nums}
+.stat span{font-size:14px;color:var(--muted)}
+.tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:16px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:760px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+tbody tr{cursor:pointer}
+tbody tr:hover,tbody tr.sel{background:var(--accent-soft)}
+td.num{font-variant-numeric:tabular-nums;font-weight:700}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:700;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.mute{background:var(--paper);color:var(--muted)}
+.pats{display:flex;flex-wrap:wrap;gap:6px}
+.pat{font-family:var(--word);font-weight:700;font-size:15px;border-radius:8px;padding:3px 9px;border:2px solid transparent}
+.pat.ok{background:var(--good-soft);color:var(--good)}
+.pat.miss{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.pat.chk{background:var(--warn-soft);color:var(--warn)}
+.detail{display:grid;gap:18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.list{display:grid;gap:8px}
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:var(--paper);border-radius:12px;padding:8px 10px;min-width:0}
+.item .w{font-family:var(--word);font-weight:700;font-size:22px;min-width:64px}
+.item .heard{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.item .acts{display:flex;gap:6px;align-items:center}
+.iconbtn{border:2px solid var(--line);background:var(--card);border-radius:10px;width:38px;height:38px;display:grid;place-items:center;padding:0}
+.iconbtn svg{width:18px;height:18px}
+.iconbtn.on-good{background:var(--good);border-color:var(--good);color:#fff}
+.iconbtn.on-bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.confirm{background:var(--bad-soft);border-radius:12px;padding:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+@media (max-width:560px){
+  h1{font-size:28px} .card{padding:20px}
+  .opt{font-size:32px;padding:16px 4px} .bigword{font-size:68px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ============ STUDENT: HOME ============ -->
+<main class="wrap" id="v-home">
+  <section class="card">
+    <div class="brand"><span class="chip">-at</span><span class="chip">-ip</span><span class="chip g">cat</span></div>
+    <div><p class="eyebrow">Phonics check</p><h1 id="testTitle">Letter Patterns Check</h1></div>
+    <div class="steps">
+      <div class="step"><b>Part 1 · Listen</b><span class="muted">Hear a word. Tap the word you hear. 20 words.</span></div>
+      <div class="step"><b>Part 2 · Read</b><span class="muted">See a word. Read it out loud into the microphone. 20 words.</span></div>
+    </div>
+    <form id="startForm" class="grid" style="display:grid;gap:14px">
+      <div class="field"><label for="stuName">Your name</label><input type="text" id="stuName" autocomplete="off" maxlength="40" placeholder="First name or student code" required></div>
+      <div class="field"><label for="stuGroup">Your group</label>
+        <select id="stuGroup"><option>Group 1</option><option>Group 2</option><option>Group 3</option><option>Other</option></select></div>
+      <div class="row"><button class="btn" type="submit" id="startBtn">Start</button><span class="muted" id="browserNote"></span></div>
+    </form>
+  </section>
+  <div class="center"><button class="link" id="teacherLink" type="button">Teacher results</button></div>
+</main>
+
+<!-- ============ PART 1 INTRO + PRACTICE ============ -->
+<main class="wrap" id="v-p1intro" hidden>
+  <section class="card">
+    <div><p class="eyebrow">Part 1 · Listen</p><h2>Let's practise first</h2></div>
+    <p class="muted">Tap the blue button to hear a word. Then tap the word you hear.</p>
+    <button class="speaker" id="pracSpeak" type="button" aria-label="Hear the word"></button>
+    <div class="opts" id="pracOpts"></div>
+    <p class="status" id="pracMsg"></p>
+    <div class="center"><button class="btn" id="p1Go" type="button" hidden>Start Part 1</button></div>
+  </section>
+</main>
+
+<!-- ============ PART 1 ============ -->
+<main class="wrap" id="v-p1" hidden>
+  <section class="card">
+    <div class="prog"><div class="lbl"><span>Part 1 · Listen</span><span id="p1Count">1 of 20</span></div><div class="bar"><i id="p1Bar"></i></div></div>
+    <button class="speaker" id="p1Speak" type="button" aria-label="Hear the word again"></button>
+    <p class="center muted">Tap the button to hear it again.</p>
+    <div class="opts" id="p1Opts"></div>
+  </section>
+</main>
+
+<!-- ============ PART 2 INTRO / MIC CHECK ============ -->
+<main class="wrap" id="v-p2intro" hidden>
+  <section class="card">
+    <div><p class="eyebrow">Part 2 · Read</p><h2>Great listening! Now you read.</h2></div>
+    <p class="muted">You will see a word. Tap the red microphone and read the word out loud. Say it once, clearly.</p>
+    <div id="micAsk" class="center" style="display:grid;gap:12px">
+      <button class="btn" id="micBtn" type="button" style="margin-inline:auto">Turn on the microphone</button>
+      <p class="muted" style="font-size:15px">Your browser will ask to use the microphone. Tap <b>Allow</b>.</p>
+    </div>
+    <div id="micOk" hidden style="display:grid;gap:12px">
+      <p class="center"><b>Say your name.</b> Does the green bar move?</p>
+      <div class="meter"><i id="checkMeter"></i></div>
+      <div class="center"><button class="btn" id="p2Go" type="button">Yes! Start Part 2</button></div>
+    </div>
+    <div id="micNo" class="notice" hidden>The microphone is not working on this computer. Tell your teacher. You can still finish: tap the button to end the test.<div style="margin-top:10px"><button class="btn small" id="noMicDone" type="button">Finish the test</button></div></div>
+  </section>
+</main>
+
+<!-- ============ PART 2 ============ -->
+<main class="wrap" id="v-p2" hidden>
+  <section class="card">
+    <div class="prog"><div class="lbl"><span>Part 2 · Read</span><span id="p2Count">1 of 20</span></div><div class="bar"><i id="p2Bar"></i></div></div>
+    <div class="bigword" id="p2Word">hat</div>
+    <button class="mic" id="recBtn" type="button" aria-label="Record"></button>
+    <div class="meter"><i id="recMeter"></i></div>
+    <p class="status" id="recMsg">Tap the microphone, then read the word.</p>
+    <div class="row" style="justify-content:center">
+      <button class="btn ghost" id="againBtn" type="button" hidden>Read it again</button>
+      <button class="btn" id="nextBtn" type="button" hidden>Next word</button>
+      <button class="link" id="skipBtn" type="button">I don't know this word</button>
+    </div>
+  </section>
+</main>
+
+<!-- ============ DONE ============ -->
+<main class="wrap" id="v-done" hidden>
+  <section class="card center">
+    <div class="brand" style="justify-content:center"><span class="chip g">Done!</span></div>
+    <h2 id="doneTitle">You're all done!</h2>
+    <p class="muted" id="doneMsg">Saving your answers…</p>
+    <p id="doneScore" hidden></p>
+    <div><button class="btn ghost" id="homeBtn" type="button">Back to start</button></div>
+  </section>
+</main>
+
+<!-- ============ TEACHER LOGIN ============ -->
+<main class="wrap" id="v-tlogin" hidden>
+  <section class="card">
+    <div><p class="eyebrow">Teacher</p><h2>Results</h2></div>
+    <div id="loginLocal" style="display:grid;gap:12px">
+      <p class="muted">Enter the teacher PIN.</p>
+      <div class="field"><label for="pin">PIN</label><input type="password" id="pin" inputmode="numeric" autocomplete="off"></div>
+      <div class="row"><button class="btn" id="pinBtn" type="button">Open results</button><span class="status" id="pinMsg" style="color:var(--bad)"></span></div>
+    </div>
+    <div id="loginFire" hidden style="display:grid;gap:12px">
+      <p class="muted">Sign in with the Google account named in your Firestore rules.</p>
+      <div class="row"><button class="btn" id="googleBtn" type="button">Sign in with Google</button><span class="status" id="gMsg" style="color:var(--bad)"></span></div>
+    </div>
+    <div><button class="link" id="backHome1" type="button">Back to student start</button></div>
+  </section>
+</main>
+
+<!-- ============ TEACHER DASHBOARD ============ -->
+<main class="wrap wide" id="v-teacher" hidden>
+  <div class="tbar">
+    <div><p class="eyebrow">Teacher results</p><h1>Letter Patterns Check</h1></div>
+    <div class="row">
+      <button class="btn small ghost" id="refreshBtn" type="button">Refresh</button>
+      <button class="btn small ghost" id="csvBtn" type="button">Download CSV</button>
+      <button class="btn small ghost" id="jsonBtn" type="button" hidden>Back up (JSON)</button>
+      <label class="btn small ghost" id="importLbl" hidden for="importFile" style="cursor:pointer">Import backup</label>
+      <input type="file" id="importFile" accept="application/json" hidden>
+      <button class="btn small ghost" id="signOutBtn" type="button">Close</button>
+    </div>
+  </div>
+  <p class="notice" id="localNotice" hidden>Local mode: results are saved on this computer only. To collect results from every student device, add your Firebase settings to the page (see the setup guide).</p>
+  <div class="stats" id="stats"></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Student</th><th>Group</th><th>Date</th><th>Part 1</th><th>Part 2</th><th>To check</th><th>Patterns missed</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table></div>
+  <p class="muted" id="emptyMsg" hidden>No tests yet. When a student finishes, their results appear here.</p>
+  <section class="card detail" id="detail" hidden></section>
+</main>
+
+<script>
+/* =====================================================================
+   SETTINGS: edit these before you host the page.
+   ===================================================================== */
+const CONFIG = {
+  // Paste your Firebase web-app config here, e.g. { apiKey:"...", authDomain:"...", projectId:"...", appId:"..." }.
+  // Leave as null to run in local mode (results stay on the one computer).
+  firebase: {
+    apiKey: "AIzaSyAlvTecXVHkoR7CZBMZ7rBwP47bN8ynkK0",
+    authDomain: "daybook-3c39c.firebaseapp.com",
+    projectId: "daybook-3c39c",
+    storageBucket: "daybook-3c39c.firebasestorage.app",
+    messagingSenderId: "673483245849",
+    appId: "1:673483245849:web:9101a11007bc527501dd88"
+  },
+  collection: 'phonicsAttempts',
+  teacherPin: '2468',          // local mode only
+  speechLang: 'en-US',         // speech recognition language ('en-CA' also works in Chrome)
+  showStudentScore: false,     // true = students see their Part 1 score at the end
+  maxRecordMs: 4000
+};
+
+/* ======================= TEST CONTENT ======================= */
+const PATTERNS = ['-at','-ag','-ap','-an','-ad','-ill','-ip','-in','-ing','-it','-ick','-ock','-op','-ot','-ug'];
+const PRACTICE = { w:'fan', f:['fin','fun'] };
+const PART1 = [
+  {w:'cat',f:['cot','cut'],p:'-at'},  {w:'bag',f:['big','bug'],p:'-ag'},  {w:'map',f:['mop','mat'],p:'-ap'},
+  {w:'man',f:['mat','map'],p:'-an'},  {w:'sad',f:['sat','sap'],p:'-ad'},  {w:'hill',f:['hip','hit'],p:'-ill'},
+  {w:'lip',f:['lap','lit'],p:'-ip'},  {w:'pin',f:['pan','pit'],p:'-in'},  {w:'sing',f:['sin','sip'],p:'-ing'},
+  {w:'pit',f:['pot','pin'],p:'-it'},  {w:'sick',f:['sock','sack'],p:'-ick'}, {w:'lock',f:['lick','lot'],p:'-ock'},
+  {w:'top',f:['tip','tap'],p:'-op'},  {w:'pot',f:['pit','pop'],p:'-ot'},  {w:'hug',f:['hog','hut'],p:'-ug'},
+  {w:'rug',f:['rag','rig'],p:'-ug'},  {w:'fill',f:['fit','fin'],p:'-ill'}, {w:'win',f:['wing','wig'],p:'-in'},
+  {w:'rock',f:['rack','rot'],p:'-ock'}, {w:'hop',f:['hip','hot'],p:'-op'}
+];
+const PART2 = [
+  {w:'hat',p:'-at'},{w:'fan',p:'-an'},{w:'dad',p:'-ad'},{w:'nap',p:'-ap'},{w:'tag',p:'-ag'},
+  {w:'will',p:'-ill'},{w:'tip',p:'-ip'},{w:'fin',p:'-in'},{w:'king',p:'-ing'},{w:'sit',p:'-it'},
+  {w:'kick',p:'-ick'},{w:'sock',p:'-ock'},{w:'mop',p:'-op'},{w:'cot',p:'-ot'},{w:'mug',p:'-ug'},
+  {w:'jug',p:'-ug'},{w:'pick',p:'-ick'},{w:'wing',p:'-ing'},{w:'bat',p:'-at'},{w:'bug',p:'-ug'}
+];
+// Spellings speech recognition may return for the same spoken word.
+const SOUNDALIKE = { cot:['caught','kot','cott'], fin:['finn'], pick:['pic'], nap:['knap'], will:['wil'], king:['kingk'], tag:['tagg'], dad:['dadd'] };
+
+/* ======================= HELPERS ======================= */
+const $ = s => document.querySelector(s);
+const VIEWS = ['v-home','v-p1intro','v-p1','v-p2intro','v-p2','v-done','v-tlogin','v-teacher'];
+function show(id){ VIEWS.forEach(v => { $('#'+v).hidden = v !== id; }); window.scrollTo(0,0); }
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const ICON = {
+  speaker:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  stop:'<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>',
+  play:'<svg viewBox="0 0 24 24"><path d="M7 5v14l12-7z" fill="currentColor"/></svg>',
+  yes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>',
+  no:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+};
+function blobToB64(blob){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]); r.onerror=()=>rej(r.error); r.readAsDataURL(blob); }); }
+function b64ToBlob(b64, mime){ const bin=atob(b64); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return new Blob([u],{type:mime||'audio/webm'}); }
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('Could not load '+src)); document.head.appendChild(s); }); }
+async function retry(fn, tries=3){ let err; for(let i=0;i<tries;i++){ try{ return await fn(); }catch(e){ err=e; await new Promise(r=>setTimeout(r,800*(i+1))); } } throw err; }
+
+/* ======================= STORAGE: LOCAL (IndexedDB) ======================= */
+const LocalStore = {
+  kind:'local', _db:null,
+  async open(){
+    if(this._db) return this._db;
+    this._db = await new Promise((res,rej)=>{
+      const r = indexedDB.open('letterPatternsCheck',1);
+      r.onupgradeneeded = () => { const d=r.result; d.createObjectStore('attempts',{keyPath:'id'}); d.createObjectStore('audio'); };
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+    return this._db;
+  },
+  async tx(store, mode, fn){
+    const d = await this.open();
+    return new Promise((res,rej)=>{ const t=d.transaction(store,mode); const req=fn(t.objectStore(store)); t.oncomplete=()=>res(req ? req.result : undefined); t.onerror=()=>rej(t.error); });
+  },
+  async create(a){ await this.tx('attempts','readwrite',s=>s.put(a)); },
+  async update(id, patch){ const cur = await this.tx('attempts','readonly',s=>s.get(id)); await this.tx('attempts','readwrite',s=>s.put(Object.assign(cur||{id}, patch))); },
+  async list(){ const all = (await this.tx('attempts','readonly',s=>s.getAll())) || []; return all.sort((a,b)=>b.createdAt-a.createdAt); },
+  async saveAudio(id,i,blob){ await this.tx('audio','readwrite',s=>s.put({blob, mime:blob.type}, id+':'+i)); },
+  async getAudio(id,i){ const r = await this.tx('audio','readonly',s=>s.get(id+':'+i)); return r ? r.blob : null; },
+  async remove(id){ await this.tx('attempts','readwrite',s=>s.delete(id)); await this.tx('audio','readwrite',s=>{ for(let i=0;i<PART2.length;i++) s.delete(id+':'+i); }); }
+};
+
+/* ======================= STORAGE: FIREBASE ======================= */
+const FireStore = {
+  kind:'firebase', fs:null, auth:null,
+  async init(){
+    const v='10.14.1', base='https://cdn.jsdelivr.net/npm/firebase@'+v+'/';
+    await loadScript(base+'firebase-app-compat.js');
+    await loadScript(base+'firebase-auth-compat.js');
+    await loadScript(base+'firebase-firestore-compat.js');
+    if(!firebase.apps.length) firebase.initializeApp(CONFIG.firebase);
+    this.fs = firebase.firestore(); this.auth = firebase.auth();
+  },
+  col(){ return this.fs.collection(CONFIG.collection); },
+  async create(a){ await this.col().doc(a.id).set(a); },
+  async update(id, patch){ await this.col().doc(id).update(patch); },
+  async list(){ const q = await this.col().orderBy('createdAt','desc').get(); return q.docs.map(d=>d.data()); },
+  async saveAudio(id,i,blob){ const b64 = await blobToB64(blob); await this.col().doc(id).collection('audio').doc(String(i)).set({ b64, mime: blob.type || 'audio/webm' }); },
+  async getAudio(id,i){ const d = await this.col().doc(id).collection('audio').doc(String(i)).get(); return d.exists ? b64ToBlob(d.data().b64, d.data().mime) : null; },
+  async remove(id){ const sub = await this.col().doc(id).collection('audio').get(); await Promise.all(sub.docs.map(d=>d.ref.delete())); await this.col().doc(id).delete(); }
+};
+
+let store = LocalStore;
+let storeReady = (async () => {
+  if(CONFIG.firebase){ try{ await FireStore.init(); store = FireStore; } catch(e){ console.error(e); store = LocalStore; } }
+})();
+
+/* ======================= SPEECH OUT (Part 1) ======================= */
+let voice = null;
+function pickVoice(){
+  if(!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v=>/en[-_]CA/i.test(v.lang)) || vs.find(v=>/en[-_]US/i.test(v.lang) && /Google|Samantha|Natural|Aria|Jenny/i.test(v.name)) || vs.find(v=>/en[-_]US/i.test(v.lang)) || vs.find(v=>/^en/i.test(v.lang)) || null;
+}
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(word, btn){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(word);
+  if(voice){ u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
+  u.rate = 0.7;
+  if(btn){ btn.classList.add('playing'); u.onend = u.onerror = () => btn.classList.remove('playing'); }
+  speechSynthesis.speak(u);
+}
+
+/* ======================= STUDENT FLOW ======================= */
+let att = null, saveErrors = 0, pending = [];
+function track(p){ const q = p.catch(e => { console.error(e); saveErrors++; }); pending.push(q); return q; }
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+$('#browserNote').textContent = SR ? '' : 'Tip: use Chrome or Edge for the reading part.';
+
+$('#startForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('#stuName').value.trim(); if(!name) return;
+  await storeReady;
+  att = { id: uid(), name, group: $('#stuGroup').value, createdAt: Date.now(), status:'in_progress', p1:[], p2:[], recog: !!SR, ua: navigator.userAgent.slice(0,120) };
+  saveErrors = 0; pending = [];
+  track(retry(()=>store.create(att)));
+  startPractice();
+});
+
+function startPractice(){
+  show('v-p1intro');
+  $('#pracSpeak').innerHTML = ICON.speaker; $('#pracMsg').textContent = ''; $('#p1Go').hidden = true;
+  const opts = shuffle([PRACTICE.w, ...PRACTICE.f]);
+  const box = $('#pracOpts'); box.innerHTML = '';
+  opts.forEach(w => {
+    const b = document.createElement('button'); b.type='button'; b.className='opt'; b.textContent=w;
+    b.onclick = () => {
+      box.querySelectorAll('.opt').forEach(o=>o.classList.remove('right','wrong'));
+      if(w === PRACTICE.w){ b.classList.add('right'); $('#pracMsg').textContent = 'Yes! That is the word "fan".'; $('#p1Go').hidden = false; }
+      else { b.classList.add('wrong'); $('#pracMsg').textContent = 'Not quite. Listen again and try one more time.'; speak(PRACTICE.w, $('#pracSpeak')); }
+    };
+    box.appendChild(b);
+  });
+}
+$('#pracSpeak').onclick = () => speak(PRACTICE.w, $('#pracSpeak'));
+
+let p1Items = [], p1i = 0, p1Lock = false;
+$('#p1Go').onclick = () => {
+  p1Items = shuffle(PART1).map(it => ({ ...it, opts: shuffle([it.w, ...it.f]) }));
+  p1i = 0; att.p1 = []; show('v-p1'); $('#p1Speak').innerHTML = ICON.speaker; renderP1();
+};
+function renderP1(){
+  const it = p1Items[p1i]; p1Lock = false;
+  $('#p1Count').textContent = (p1i+1) + ' of ' + p1Items.length;
+  $('#p1Bar').style.width = (p1i / p1Items.length * 100) + '%';
+  const box = $('#p1Opts'); box.innerHTML = '';
+  it.opts.forEach(w => {
+    const b = document.createElement('button'); b.type='button'; b.className='opt'; b.textContent=w;
+    b.onclick = () => pickP1(w, b); box.appendChild(b);
+  });
+  setTimeout(()=>speak(it.w, $('#p1Speak')), 250);
+}
+$('#p1Speak').onclick = () => { const it = p1Items[p1i]; if(it) speak(it.w, $('#p1Speak')); };
+function pickP1(choice, btn){
+  if(p1Lock) return; p1Lock = true;
+  const it = p1Items[p1i];
+  btn.classList.add('chosen');
+  att.p1.push({ w: it.w, p: it.p, opts: it.opts, choice, ok: choice === it.w });
+  setTimeout(() => {
+    p1i++;
+    if(p1i < p1Items.length) renderP1();
+    else {
+      $('#p1Bar').style.width = '100%';
+      track(retry(()=>store.update(att.id, { p1: att.p1 })));
+      startP2Intro();
+    }
+  }, 350);
+}
+
+/* ---------- Part 2: microphone ---------- */
+let stream = null, actx = null, analyser = null, meterTarget = null, meterRaf = 0;
+function startMeter(el){
+  meterTarget = el; cancelAnimationFrame(meterRaf);
+  const data = new Uint8Array(analyser.fftSize);
+  const loop = () => {
+    analyser.getByteTimeDomainData(data);
+    let peak = 0; for(const v of data) peak = Math.max(peak, Math.abs(v-128));
+    if(meterTarget) meterTarget.style.width = Math.min(100, peak/64*100) + '%';
+    meterRaf = requestAnimationFrame(loop);
+  };
+  loop();
+}
+function startP2Intro(){
+  show('v-p2intro');
+  $('#micAsk').hidden = false; $('#micOk').hidden = true; $('#micNo').hidden = true;
+  if(stream){ $('#micAsk').hidden = true; $('#micOk').hidden = false; startMeter($('#checkMeter')); }
+}
+$('#micBtn').onclick = async () => {
+  try{
+    if(!navigator.mediaDevices || !window.MediaRecorder) throw new Error('no recorder');
+    stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } });
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = actx.createAnalyser(); analyser.fftSize = 1024;
+    actx.createMediaStreamSource(stream).connect(analyser);
+    $('#micAsk').hidden = true; $('#micOk').hidden = false; startMeter($('#checkMeter'));
+  } catch(e){
+    console.error(e); $('#micAsk').hidden = true; $('#micNo').hidden = false;
+  }
+};
+$('#noMicDone').onclick = () => {
+  att.p2 = PART2.map(it => ({ w: it.w, p: it.p, auto:'nomic', heard:[], final:null, audio:false }));
+  finishTest();
+};
+
+let p2Items = [], p2i = 0, recording = false, stopFn = null, lastTake = null;
+$('#p2Go').onclick = () => {
+  p2Items = shuffle(PART2); p2i = 0; att.p2 = [];
+  $('#recBtn').innerHTML = ICON.mic; show('v-p2'); renderP2();
+};
+function renderP2(){
+  const it = p2Items[p2i]; lastTake = null;
+  $('#p2Count').textContent = (p2i+1) + ' of ' + p2Items.length;
+  $('#p2Bar').style.width = (p2i / p2Items.length * 100) + '%';
+  $('#p2Word').textContent = it.w;
+  $('#recMsg').textContent = 'Tap the microphone, then read the word.';
+  $('#againBtn').hidden = true; $('#nextBtn').hidden = true; $('#skipBtn').hidden = false;
+  $('#recBtn').hidden = false; $('#recBtn').disabled = false;
+  startMeter($('#recMeter'));
+}
+function pickMime(){
+  for(const m of ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'])
+    if(window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) return m;
+  return '';
+}
+function recordWord(){
+  return new Promise(resolve => {
+    const heard = []; const chunks = []; const mime = pickMime();
+    let blob = null, recDone = !SR, stopped = false, resolved = false, timer = 0, recog = null;
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: 24000 } : {});
+    const finish = () => { if(!resolved && blob && recDone){ resolved = true; resolve({ blob, heard }); } };
+    const stop = () => {
+      if(stopped) return; stopped = true; clearTimeout(timer);
+      try{ if(rec.state !== 'inactive') rec.stop(); }catch(e){}
+      try{ recog && recog.stop(); }catch(e){}
+      setTimeout(() => { recDone = true; finish(); }, 1500);
+    };
+    rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = () => { blob = new Blob(chunks, { type: rec.mimeType || mime || 'audio/webm' }); finish(); };
+    if(SR){
+      try{
+        recog = new SR(); recog.lang = CONFIG.speechLang; recog.maxAlternatives = 10; recog.interimResults = false; recog.continuous = false;
+        recog.onresult = e => { for(const r of e.results) for(let k=0;k<r.length;k++) heard.push(r[k].transcript); };
+        recog.onerror = () => {};
+        recog.onend = () => { recDone = true; if(heard.length) setTimeout(stop, 250); finish(); };
+        recog.start();
+      }catch(e){ recDone = true; }
+    }
+    rec.start();
+    timer = setTimeout(stop, CONFIG.maxRecordMs);
+    stopFn = stop;
+  });
+}
+function judge(word, heard){
+  if(!SR) return 'none';
+  const ok = [word, ...(SOUNDALIKE[word] || [])];
+  for(const t of heard){
+    const toks = t.toLowerCase().replace(/[^a-z' ]/g,' ').split(/\s+/).filter(Boolean);
+    if(toks.some(x => ok.includes(x) || ok.includes(x.replace(/'s$/,'')))) return 'match';
+  }
+  return heard.length ? 'nomatch' : 'silent';
+}
+$('#recBtn').onclick = async () => {
+  if(recording){ stopFn && stopFn(); return; }
+  recording = true;
+  const btn = $('#recBtn'); btn.classList.add('on'); btn.innerHTML = ICON.stop;
+  $('#recMsg').textContent = 'Listening… read the word now.';
+  $('#againBtn').hidden = true; $('#nextBtn').hidden = true; $('#skipBtn').hidden = true;
+  const take = await recordWord();
+  recording = false; btn.classList.remove('on'); btn.innerHTML = ICON.mic;
+  lastTake = take;
+  btn.hidden = true;
+  $('#recMsg').textContent = 'Got it!';
+  $('#againBtn').hidden = false; $('#nextBtn').hidden = false;
+};
+$('#againBtn').onclick = () => { lastTake = null; $('#recBtn').hidden = false; $('#againBtn').hidden = true; $('#nextBtn').hidden = true; $('#recMsg').textContent = 'Tap the microphone, then read the word.'; };
+$('#nextBtn').onclick = () => commitP2(false);
+$('#skipBtn').onclick = () => commitP2(true);
+function commitP2(skipped){
+  const it = p2Items[p2i]; const idx = p2i;
+  if(skipped || !lastTake){
+    att.p2.push({ w: it.w, p: it.p, auto:'skipped', heard:[], final:false, audio:false });
+  } else {
+    const heard = [...new Set(lastTake.heard.map(h=>h.trim()).filter(Boolean))].slice(0,6);
+    att.p2.push({ w: it.w, p: it.p, auto: judge(it.w, heard), heard, final:null, audio:true, idx });
+    const blob = lastTake.blob;
+    track(retry(()=>store.saveAudio(att.id, idx, blob)));
+  }
+  track(retry(()=>store.update(att.id, { p2: att.p2 })));
+  p2i++;
+  if(p2i < p2Items.length) renderP2();
+  else finishTest();
+}
+async function finishTest(){
+  cancelAnimationFrame(meterRaf);
+  show('v-done');
+  $('#doneMsg').textContent = 'Saving your answers…';
+  $('#doneScore').hidden = true;
+  await Promise.all(pending);
+  try{ await retry(()=>store.update(att.id, { status:'done', finishedAt: Date.now() })); }catch(e){ saveErrors++; }
+  $('#doneMsg').textContent = saveErrors ? 'Some answers did not save. Please tell your teacher.' : 'Your answers are saved. Great work!';
+  if(CONFIG.showStudentScore){ const n = att.p1.filter(x=>x.ok).length; $('#doneScore').hidden = false; $('#doneScore').textContent = 'Part 1: ' + n + ' out of 20'; }
+}
+$('#homeBtn').onclick = () => { $('#stuName').value = ''; att = null; show('v-home'); };
+
+/* ======================= TEACHER ======================= */
+let rows = [], selId = null, teacherOpen = false;
+$('#teacherLink').onclick = async () => {
+  await storeReady;
+  show('v-tlogin');
+  const fire = store.kind === 'firebase';
+  $('#loginLocal').hidden = fire; $('#loginFire').hidden = !fire;
+  if(fire && store.auth.currentUser) openDashboard();
+};
+$('#backHome1').onclick = () => show('v-home');
+$('#pinBtn').onclick = () => { if($('#pin').value === CONFIG.teacherPin){ $('#pin').value=''; $('#pinMsg').textContent=''; openDashboard(); } else $('#pinMsg').textContent = 'That PIN is not right.'; };
+$('#pin').addEventListener('keydown', e => { if(e.key === 'Enter') $('#pinBtn').click(); });
+$('#googleBtn').onclick = async () => {
+  try{ await store.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); openDashboard(); }
+  catch(e){ $('#gMsg').textContent = 'Sign-in did not finish: ' + (e.code || e.message); }
+};
+$('#signOutBtn').onclick = async () => { teacherOpen = false; if(store.kind === 'firebase'){ try{ await store.auth.signOut(); }catch(e){} } show('v-home'); };
+$('#refreshBtn').onclick = () => loadRows();
+
+async function openDashboard(){
+  teacherOpen = true; show('v-teacher');
+  const local = store.kind === 'local';
+  $('#localNotice').hidden = !local; $('#jsonBtn').hidden = !local; $('#importLbl').hidden = !local;
+  await loadRows();
+}
+async function loadRows(){
+  try{ rows = await store.list(); }
+  catch(e){
+    rows = [];
+    $('#stats').innerHTML = '<p class="notice">Could not read results (' + esc(e.code || e.message) + '). Check that this Google account is the teacher email in your Firestore rules.</p>';
+    $('#tbody').innerHTML = ''; return;
+  }
+  renderTable();
+  if(selId && rows.find(r=>r.id===selId)) renderDetail(selId); else { $('#detail').hidden = true; selId = null; }
+}
+
+function summarize(a){
+  const p1 = a.p1 || [], p2 = a.p2 || [];
+  const p1Score = p1.filter(x=>x.ok).length;
+  let p2Score = 0, toCheck = 0;
+  const miss = {}, chk = {};
+  p1.forEach(x => { if(!x.ok) miss[x.p] = (miss[x.p]||0) + 1; });
+  p2.forEach(x => {
+    const v = verdict(x);
+    if(v === true) p2Score++;
+    else if(v === false) miss[x.p] = (miss[x.p]||0) + 1;
+    else { toCheck++; chk[x.p] = (chk[x.p]||0) + 1; }
+  });
+  return { p1Score, p1n: p1.length, p2Score, p2n: p2.length, toCheck, miss, chk };
+}
+function verdict(x){ if(x.final === true || x.final === false) return x.final; if(x.auto === 'match') return true; return null; }
+
+function renderTable(){
+  const tb = $('#tbody'); tb.innerHTML = '';
+  $('#emptyMsg').hidden = rows.length > 0;
+  const done = rows.filter(r=>r.status==='done');
+  const sums = done.map(summarize);
+  const avg = k => sums.length ? (sums.reduce((s,x)=>s+x[k],0)/sums.length).toFixed(1) : '–';
+  const totalCheck = rows.map(summarize).reduce((s,x)=>s+x.toCheck,0);
+  const patCount = {}; sums.forEach(s => Object.keys(s.miss).forEach(p => patCount[p] = (patCount[p]||0) + 1));
+  const hardest = Object.entries(patCount).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([p,n])=>p+' ('+n+')').join(', ') || '–';
+  $('#stats').innerHTML =
+    '<div class="stat"><b>'+done.length+'</b><span>finished tests</span></div>'+
+    '<div class="stat"><b>'+avg('p1Score')+'</b><span>average Part 1 (out of 20)</span></div>'+
+    '<div class="stat"><b>'+avg('p2Score')+'</b><span>average Part 2 confirmed</span></div>'+
+    '<div class="stat"><b>'+totalCheck+'</b><span>recordings to check</span></div>'+
+    '<div class="stat" style="grid-column:span 2"><b style="font-size:20px;font-family:var(--word)">'+esc(hardest)+'</b><span>patterns missed by the most students</span></div>';
+  rows.forEach(a => {
+    const s = summarize(a);
+    const tr = document.createElement('tr'); if(a.id === selId) tr.className = 'sel';
+    const d = new Date(a.createdAt);
+    const status = a.status === 'done' ? '' : ' <span class="pill mute">not finished</span>';
+    const missed = Object.keys(s.miss).sort((x,y)=>PATTERNS.indexOf(x)-PATTERNS.indexOf(y)).map(p=>'<span class="pat miss">'+p+'</span>').join('') || '<span class="pill good">none</span>';
+    tr.innerHTML = '<td><b>'+esc(a.name)+'</b>'+status+'</td><td>'+esc(a.group)+'</td><td>'+d.toLocaleDateString()+' '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+'</td>'+
+      '<td class="num">'+s.p1Score+' / '+(s.p1n||20)+'</td><td class="num">'+s.p2Score+' / '+(s.p2n||20)+'</td>'+
+      '<td>'+(s.toCheck ? '<span class="pill warn">'+s.toCheck+' to check</span>' : '<span class="pill good">done</span>')+'</td>'+
+      '<td><div class="pats">'+missed+'</div></td>';
+    tr.onclick = () => { selId = a.id; renderTable(); renderDetail(a.id); $('#detail').scrollIntoView({behavior:'smooth', block:'start'}); };
+    tb.appendChild(tr);
+  });
+}
+
+function renderDetail(id){
+  const a = rows.find(r=>r.id===id); if(!a) return;
+  const s = summarize(a); const el = $('#detail'); el.hidden = false;
+  const patChips = PATTERNS.map(p => {
+    const cls = s.miss[p] ? 'miss' : s.chk[p] ? 'chk' : 'ok';
+    const title = s.miss[p] ? s.miss[p]+' missed' : s.chk[p] ? 'needs checking' : 'correct';
+    return '<span class="pat '+cls+'" title="'+title+'">'+p+'</span>';
+  }).join('');
+  const p1html = (a.p1||[]).map(x =>
+    '<div class="item"><span class="w">'+esc(x.w)+'</span><span class="heard">'+(x.ok ? 'chose '+esc(x.choice) : 'chose <b style="color:var(--bad)">'+esc(x.choice)+'</b> · options: '+esc((x.opts||[]).join(', ')))+'</span><span class="pill '+(x.ok?'good':'bad')+'">'+(x.ok?'right':'wrong')+'</span></div>').join('') || '<p class="muted">Part 1 not done.</p>';
+  const autoLabel = { match:['good','heard it'], nomatch:['warn','check'], silent:['warn','nothing heard'], none:['warn','check'], skipped:['bad','skipped'], nomic:['mute','no mic'] };
+  const p2html = (a.p2||[]).map((x,i) => {
+    const v = verdict(x); const [cls,lab] = autoLabel[x.auto] || ['mute', x.auto];
+    const heard = x.heard && x.heard.length ? 'heard: '+esc(x.heard.slice(0,3).join(' / ')) : (x.auto==='skipped' ? 'student skipped' : 'no words recognized');
+    return '<div class="item"><span class="w">'+esc(x.w)+'</span><span class="heard"><span class="pill '+cls+'">'+lab+'</span> '+heard+'</span><span class="acts">'+
+      (x.audio ? '<button class="iconbtn" data-play="'+(x.idx ?? i)+'" aria-label="Play recording" type="button">'+ICON.play+'</button>' : '')+
+      (x.auto==='skipped' ? '' : '<button class="iconbtn'+(v===true?' on-good':'')+'" data-mark="'+i+'" data-val="1" aria-label="Mark correct" type="button">'+ICON.yes+'</button>'+
+      '<button class="iconbtn'+(v===false?' on-bad':'')+'" data-mark="'+i+'" data-val="0" aria-label="Mark wrong" type="button">'+ICON.no+'</button>')+'</span></div>';
+  }).join('') || '<p class="muted">Part 2 not done.</p>';
+  el.innerHTML =
+    '<div class="tbar"><div><p class="eyebrow">'+esc(a.group)+' · '+new Date(a.createdAt).toLocaleString()+'</p><h2>'+esc(a.name)+'</h2></div>'+
+    '<div class="row"><span class="pill good">Part 1: '+s.p1Score+' / '+(s.p1n||20)+'</span><span class="pill good">Part 2: '+s.p2Score+' / '+(s.p2n||20)+'</span>'+(s.toCheck?'<span class="pill warn">'+s.toCheck+' to check</span>':'')+'</div></div>'+
+    '<div style="display:grid;gap:8px"><p class="eyebrow">Patterns (green correct · red missed · yellow still to check)</p><div class="pats">'+patChips+'</div></div>'+
+    '<div class="grid2"><div style="display:grid;gap:10px;min-width:0"><h3>Part 1 · Listen and pick</h3><p class="muted" style="font-size:14px">Scored automatically. Wrong answers show which word the student picked instead.</p><div class="list">'+p1html+'</div></div>'+
+    '<div style="display:grid;gap:10px;min-width:0"><h3>Part 2 · Read aloud</h3><p class="muted" style="font-size:14px">Play each recording. Tap ✓ or ✗ to confirm or change the computer\'s first guess.</p><div class="list">'+p2html+'</div></div></div>'+
+    '<div id="delZone"><button class="btn small ghost" id="delBtn" type="button">Delete this test</button></div>';
+  el.querySelectorAll('[data-play]').forEach(b => b.onclick = async () => {
+    try{ const blob = await store.getAudio(a.id, +b.dataset.play); if(!blob) throw 0; const url = URL.createObjectURL(blob); const au = new Audio(url); au.onended = () => URL.revokeObjectURL(url); await au.play(); }
+    catch(e){ b.title = 'Recording not found'; b.style.opacity = .4; }
+  });
+  el.querySelectorAll('[data-mark]').forEach(b => b.onclick = async () => {
+    const i = +b.dataset.mark; const val = b.dataset.val === '1';
+    const p2 = a.p2.map(x=>({...x})); p2[i].final = (p2[i].final === val) ? null : val;
+    a.p2 = p2; renderDetail(a.id); renderTable();
+    try{ await store.update(a.id, { p2 }); }catch(e){ alertInline('Could not save that change: ' + (e.code || e.message)); }
+  });
+  $('#delBtn').onclick = () => {
+    $('#delZone').innerHTML = '<div class="confirm"><span>Delete <b>'+esc(a.name)+'</b>\'s test and recordings for good?</span><button class="btn small bad" id="delYes" type="button">Delete</button><button class="btn small ghost" id="delNo" type="button">Keep it</button></div>';
+    $('#delNo').onclick = () => renderDetail(a.id);
+    $('#delYes').onclick = async () => { try{ await store.remove(a.id); selId = null; await loadRows(); }catch(e){ alertInline('Could not delete: '+(e.code||e.message)); } };
+  };
+}
+function alertInline(msg){ const p = document.createElement('p'); p.className='notice'; p.textContent = msg; $('#detail').prepend(p); setTimeout(()=>p.remove(), 6000); }
+
+/* ---------- exports ---------- */
+function download(name, text, type){
+  const url = URL.createObjectURL(new Blob([text], {type}));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+$('#csvBtn').onclick = () => {
+  const head = ['Student','Group','Date','Status','Part 1 (/20)','Part 2 confirmed (/20)','Part 2 to check', ...PATTERNS.map(p=>'Missed '+p), 'Part 1 wrong words','Part 2 wrong words'];
+  const lines = [head];
+  rows.forEach(a => {
+    const s = summarize(a);
+    lines.push([a.name, a.group, new Date(a.createdAt).toLocaleString(), a.status, s.p1Score, s.p2Score, s.toCheck,
+      ...PATTERNS.map(p=>s.miss[p]||0),
+      (a.p1||[]).filter(x=>!x.ok).map(x=>x.w+'→'+x.choice).join(' '),
+      (a.p2||[]).filter(x=>verdict(x)===false).map(x=>x.w).join(' ')]);
+  });
+  const csv = lines.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  download('letter-patterns-check.csv', '﻿'+csv, 'text/csv');
+};
+$('#jsonBtn').onclick = async () => {
+  const out = [];
+  for(const a of rows){
+    const audio = {};
+    for(const x of (a.p2||[])) if(x.audio){ const b = await store.getAudio(a.id, x.idx); if(b) audio[x.idx] = { b64: await blobToB64(b), mime: b.type }; }
+    out.push({ ...a, _audio: audio });
+  }
+  download('letter-patterns-backup.json', JSON.stringify(out), 'application/json');
+};
+$('#importFile').onchange = async e => {
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    const data = JSON.parse(await f.text());
+    for(const a of data){
+      const { _audio, ...rec } = a; await store.create(rec);
+      for(const [i, v] of Object.entries(_audio || {})) await store.saveAudio(rec.id, +i, b64ToBlob(v.b64, v.mime));
+    }
+    await loadRows();
+  }catch(err){ alertInline('That file could not be imported.'); }
+  e.target.value = '';
+};
+</script>
+</body>
+</html>
