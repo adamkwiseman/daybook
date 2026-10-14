@@ -189,7 +189,7 @@ td.num{font-variant-numeric:tabular-nums;font-weight:700}
     <div class="readline" id="readLine"></div>
     <p class="center muted" id="readHint">Read the words from left to right.</p>
     <button class="mic" id="recBtn" type="button" aria-label="Start recording"></button>
-    <p class="reclabel idle" id="recLabel" aria-live="polite">Tap to record</p>
+    <p class="reclabel idle" id="recLabel" aria-live="polite">TAP</p>
     <div class="meter off" id="recMeterBox"><i id="recMeter"></i></div>
     <p class="status muted" id="recMsg">Tap the blue microphone, then read.</p>
     <div class="row" style="justify-content:center">
@@ -571,7 +571,7 @@ function recUI(state){
   card.classList.toggle('recording', state === 'live');
   $('#recMeterBox').classList.toggle('off', state !== 'live');
   lab.className = 'reclabel ' + state;
-  if(state === 'idle'){ btn.hidden = false; btn.innerHTML = ICON.mic; btn.setAttribute('aria-label','Start recording'); lab.textContent = 'Tap to record'; $('#recMsg').textContent = 'Tap the blue microphone, then read.'; }
+  if(state === 'idle'){ btn.hidden = false; btn.innerHTML = ICON.mic; btn.setAttribute('aria-label','Start recording'); lab.textContent = 'TAP'; $('#recMsg').textContent = 'Tap the blue microphone, then read.'; }
   if(state === 'live'){
     btn.innerHTML = ICON.stop; btn.setAttribute('aria-label','Stop recording');
     const t0 = Date.now(); const tick = () => { const s = Math.floor((Date.now()-t0)/1000); lab.textContent = '● Recording ' + Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); };
