@@ -680,7 +680,7 @@ $('#backHome1').onclick = () => show('v-home');
 $('#pinBtn').onclick = () => { if($('#pin').value === CONFIG.teacherPin){ $('#pin').value=''; $('#pinMsg').textContent=''; openDashboard(); } else $('#pinMsg').textContent = 'That PIN is not right.'; };
 $('#pin').addEventListener('keydown', e => { if(e.key === 'Enter') $('#pinBtn').click(); });
 $('#googleBtn').onclick = async () => {
-  try{ await store.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); openDashboard(); }
+  try{ const prov = new firebase.auth.GoogleAuthProvider(); prov.setCustomParameters({ prompt:'select_account' }); await store.auth.signInWithPopup(prov); openDashboard(); }
   catch(e){ $('#gMsg').textContent = 'Sign-in did not finish: ' + (e.code || e.message); }
 };
 $('#signOutBtn').onclick = async () => { stopAudio(); if(store.kind === 'firebase'){ try{ await store.auth.signOut(); }catch(e){} } show('v-home'); };
@@ -696,7 +696,13 @@ async function loadRows(){
   try{ rows = await store.list(); }
   catch(e){
     rows = [];
-    $('#stats').innerHTML = '<p class="notice">Could not read results (' + esc(e.code || e.message) + '). Check that this Google account is the teacher email in your Firestore rules, and that the coreAttempts rules are published.</p>';
+    const who = store.kind === 'firebase' && store.auth.currentUser ? store.auth.currentUser.email : '';
+    $('#stats').innerHTML = '<div class="notice" style="display:grid;gap:8px;grid-column:1/-1"><span>Could not read results (' + esc(e.code || e.message) + ').</span>' +
+      (who ? '<span>You are signed in as <b>' + esc(who) + '</b>. This must be the same email that is written in the coreAttempts rules in Firebase.</span>' : '') +
+      '<span>Also check that the coreAttempts rules were pasted inside the rules and that you clicked <b>Publish</b>.</span>' +
+      (who ? '<div><button class="btn small" id="switchAcct" type="button">Sign in with a different Google account</button></div>' : '') + '</div>';
+    const sw = document.getElementById('switchAcct');
+    if(sw) sw.onclick = async () => { try{ await store.auth.signOut(); const prov = new firebase.auth.GoogleAuthProvider(); prov.setCustomParameters({ prompt:'select_account' }); await store.auth.signInWithPopup(prov); loadRows(); }catch(err){ show('v-tlogin'); } };
     $('#tbody').innerHTML = ''; $('#thead').innerHTML = ''; return;
   }
   renderTable();
