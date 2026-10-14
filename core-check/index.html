@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>CORE Phonics Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Same look as the Letter Patterns Check: one calm card for students, a wide dashboard for the teacher. */
+:root{
+  --paper:#F5F8FC; --card:#FFFFFF; --ink:#18233A; --muted:#5A6782; --line:#DCE3EE;
+  --hi:#FFE94D; --hi-ink:#2A2400; --key:#2BB673; --accent:#2F5BEA; --accent-soft:#E6ECFD;
+  --good:#1E9E5A; --good-soft:#E3F6EC; --warn:#B7791F; --warn-soft:#FDF2DC; --bad:#D04040; --bad-soft:#FBE6E6;
+  --pseudo:#7B3FB8; --pseudo-soft:#F1E6FA;
+  --word:"Andika","Atkinson Hyperlegible",system-ui,sans-serif;
+  --ui:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1522; --card:#172036; --ink:#E8EDF7; --muted:#9AA7C2; --line:#28344D;
+  --hi:#E5CF2E; --hi-ink:#1F1A00; --key:#3CC983; --accent:#7C9BFF; --accent-soft:#1E2A4D;
+  --good:#4CD38A; --good-soft:#153126; --warn:#E8B04A; --warn-soft:#33270F; --bad:#FF7A7A; --bad-soft:#3A1A1E;
+  --pseudo:#C79BF2; --pseudo-soft:#2A1E3D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F1522; --card:#172036; --ink:#E8EDF7; --muted:#9AA7C2; --line:#28344D;
+  --hi:#E5CF2E; --hi-ink:#1F1A00; --key:#3CC983; --accent:#7C9BFF; --accent-soft:#1E2A4D;
+  --good:#4CD38A; --good-soft:#153126; --warn:#E8B04A; --warn-soft:#33270F; --bad:#FF7A7A; --bad-soft:#3A1A1E;
+  --pseudo:#C79BF2; --pseudo-soft:#2A1E3D; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:17px;line-height:1.5;padding-inline:16px;padding-block:24px 48px}
+[hidden]{display:none!important}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:820px;margin-inline:auto;display:grid;gap:20px}
+.wrap.wide{max-width:1180px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;display:grid;gap:20px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{background:var(--hi);color:var(--hi-ink);font-family:var(--word);font-weight:700;border-radius:10px;padding:4px 12px;font-size:20px}
+.chip.g{background:var(--key);color:#fff} .chip.p{background:var(--pseudo);color:#fff}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-size:34px} h2{font-size:26px}
+p{margin:0}
+.muted{color:var(--muted)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.field{display:grid;gap:6px}
+.field label{font-weight:700}
+input[type=text],input[type=password],select{font:inherit;font-size:20px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);width:100%}
+.btn{border:0;border-radius:14px;padding:14px 22px;font-weight:700;font-size:19px;background:var(--accent);color:#fff;display:inline-flex;align-items:center;gap:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--line)}
+.btn.small{padding:8px 14px;font-size:15px;border-radius:10px}
+.btn.good{background:var(--good)} .btn.bad{background:var(--bad)}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:15px;padding:4px}
+.center{text-align:center}
+.steps{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.step{background:var(--paper);border-radius:14px;padding:14px 16px;display:grid;gap:4px}
+.step b{font-size:18px}
+.notice{background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);border-radius:14px;padding:12px 16px;font-size:15px}
+/* progress */
+.prog{display:grid;gap:6px}
+.prog .bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.prog .bar i{display:block;height:100%;background:var(--key);border-radius:6px;transition:width .3s}
+.prog .lbl{display:flex;justify-content:space-between;gap:8px;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* reading line */
+.tag{justify-self:center;border-radius:999px;padding:4px 14px;font-weight:700;font-size:15px}
+.tag.real{background:var(--good-soft);color:var(--good)} .tag.pseudo{background:var(--pseudo-soft);color:var(--pseudo)}
+.readline{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 14px;background:var(--hi);color:var(--hi-ink);border-radius:24px;padding:28px 14px}
+.readline.pseudo{background:var(--pseudo-soft);color:var(--ink);outline:3px dashed var(--pseudo);outline-offset:-3px}
+.readline span{font-family:var(--word);font-weight:700;font-size:48px;line-height:1.1;padding:2px 10px;border-radius:12px}
+.readline.col{flex-direction:column;align-items:center;gap:6px;padding:20px 14px}
+.readline.col span{font-size:36px}
+.readline.letters span{font-size:52px;min-width:1.2em;text-align:center}
+.mic{width:120px;height:120px;border-radius:50%;border:0;background:var(--bad);color:#fff;display:grid;place-items:center;margin-inline:auto}
+.mic svg{width:56px;height:56px}
+.mic.on{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.05)}}
+.meter{height:14px;background:var(--line);border-radius:8px;overflow:hidden;max-width:360px;width:100%;margin-inline:auto}
+.meter i{display:block;height:100%;width:0;background:var(--key);transition:width .08s}
+.status{text-align:center;font-weight:700;min-height:1.5em}
+/* teacher */
+.tbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:28px;font-variant-numeric:tabular-nums}
+.stat span{font-size:14px;color:var(--muted)}
+.tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:16px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+tbody tr{cursor:pointer}
+tbody tr:hover,tbody tr.sel{background:var(--accent-soft)}
+td.num{font-variant-numeric:tabular-nums;font-weight:700}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:700;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.mute{background:var(--paper);color:var(--muted)} .pill.p{background:var(--pseudo-soft);color:var(--pseudo)}
+.score{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px}
+.score small{font-size:11px;font-weight:700;letter-spacing:.03em}
+.score small.B{color:var(--good)} .score small.S{color:var(--warn)} .score small.I{color:var(--bad)}
+.partbox{border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:12px}
+.lineitem{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;background:var(--paper);border-radius:12px;padding:10px 12px}
+.lineitem .acts{display:flex;flex-direction:column;gap:6px}
+.wchips{display:flex;flex-wrap:wrap;gap:6px}
+.wchip{font-family:var(--word);font-weight:700;font-size:19px;border-radius:10px;padding:4px 10px;border:2px solid var(--line);background:var(--card);display:inline-flex;align-items:center;gap:6px}
+.wchip .mk{font-family:var(--ui);font-size:13px}
+.wchip.t{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.wchip.f{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.wchip.q{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.wchip.auto{border-style:dashed}
+.heard{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.iconbtn{border:2px solid var(--line);background:var(--card);border-radius:10px;min-width:40px;height:38px;display:grid;place-items:center;padding:0 8px;font-size:13px;font-weight:700}
+.iconbtn svg{width:18px;height:18px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.confirm{background:var(--bad-soft);border-radius:12px;padding:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.checks label{border:2px solid var(--line);border-radius:10px;padding:6px 10px;display:flex;gap:6px;align-items:center;font-weight:700;cursor:pointer}
+.linkbox{font-family:ui-monospace,monospace;font-size:14px;background:var(--paper);border-radius:10px;padding:10px;overflow-wrap:anywhere}
+@media (max-width:560px){
+  h1{font-size:28px} .card{padding:20px}
+  .readline span{font-size:34px} .readline.letters span{font-size:38px} .readline.col span{font-size:28px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ============ STUDENT: HOME ============ -->
+<main class="wrap" id="v-home">
+  <section class="card">
+    <div class="brand"><span class="chip">sip</span><span class="chip">stop</span><span class="chip p">nop</span><span class="chip g">rec</span></div>
+    <div><p class="eyebrow">Reading check</p><h1>CORE Phonics Check</h1></div>
+    <div class="steps">
+      <div class="step"><b>See a line of words</b><span class="muted">Some are real words. Some are made-up words.</span></div>
+      <div class="step"><b>Read them out loud</b><span class="muted">Tap the red microphone. Read the words, left to right.</span></div>
+      <div class="step"><b>Tap stop</b><span class="muted">Then go to the next line. Do your best!</span></div>
+    </div>
+    <p class="muted" id="partsNote"></p>
+    <form id="startForm" style="display:grid;gap:14px">
+      <div class="field"><label for="stuName">Your name</label><input type="text" id="stuName" autocomplete="off" maxlength="40" placeholder="First name or student code" required></div>
+      <div class="field"><label for="stuGroup">Your group</label>
+        <select id="stuGroup"><option>Group 1</option><option>Group 2</option><option>Group 3</option><option>Other</option></select></div>
+      <div class="row"><button class="btn" type="submit" id="startBtn">Start</button><span class="muted" id="browserNote"></span></div>
+    </form>
+  </section>
+  <div class="center"><button class="link" id="teacherLink" type="button">Teacher results</button></div>
+</main>
+
+<!-- ============ MIC CHECK ============ -->
+<main class="wrap" id="v-mic" hidden>
+  <section class="card">
+    <div><p class="eyebrow">Get ready</p><h2>Let's check the microphone</h2></div>
+    <div id="micAsk" class="center" style="display:grid;gap:12px">
+      <button class="btn" id="micBtn" type="button" style="margin-inline:auto">Turn on the microphone</button>
+      <p class="muted" style="font-size:15px">Your browser will ask to use the microphone. Tap <b>Allow</b>.</p>
+    </div>
+    <div id="micOk" hidden style="display:grid;gap:12px">
+      <p class="center"><b>Say your name.</b> Does the green bar move?</p>
+      <div class="meter"><i id="checkMeter"></i></div>
+      <div class="center"><button class="btn" id="micGo" type="button">Yes! Let's start</button></div>
+    </div>
+    <div id="micNo" class="notice" hidden>The microphone is not working on this computer. Tell your teacher.<div style="margin-top:10px"><button class="btn small ghost" id="micRetry" type="button">Try again</button></div></div>
+  </section>
+</main>
+
+<!-- ============ PART INTRO ============ -->
+<main class="wrap" id="v-intro" hidden>
+  <section class="card center">
+    <p class="eyebrow" id="introEyebrow">Part E</p>
+    <h2 id="introTitle">Read the words</h2>
+    <p id="introText" class="muted" style="font-size:19px"></p>
+    <div><button class="btn" id="introGo" type="button">Start</button></div>
+  </section>
+</main>
+
+<!-- ============ READ A LINE ============ -->
+<main class="wrap" id="v-read" hidden>
+  <section class="card">
+    <div class="prog"><div class="lbl"><span id="readPart">Part E</span><span id="readCount">1 of 24</span></div><div class="bar"><i id="readBar"></i></div></div>
+    <span class="tag real" id="readTag">Real words</span>
+    <div class="readline" id="readLine"></div>
+    <p class="center muted" id="readHint">Read the words from left to right.</p>
+    <button class="mic" id="recBtn" type="button" aria-label="Record"></button>
+    <div class="meter"><i id="recMeter"></i></div>
+    <p class="status" id="recMsg">Tap the microphone, then read.</p>
+    <div class="row" style="justify-content:center">
+      <button class="btn ghost" id="againBtn" type="button" hidden>Read it again</button>
+      <button class="btn" id="nextBtn" type="button" hidden>Next</button>
+      <button class="link" id="skipBtn" type="button">These are too hard for me</button>
+    </div>
+  </section>
+</main>
+
+<!-- ============ DONE ============ -->
+<main class="wrap" id="v-done" hidden>
+  <section class="card center">
+    <div class="brand" style="justify-content:center"><span class="chip g">Done!</span></div>
+    <h2>You're all done!</h2>
+    <p class="muted" id="doneMsg">Saving your reading…</p>
+    <div><button class="btn ghost" id="homeBtn" type="button">Back to start</button></div>
+  </section>
+</main>
+
+<!-- ============ TEACHER LOGIN ============ -->
+<main class="wrap" id="v-tlogin" hidden>
+  <section class="card">
+    <div><p class="eyebrow">Teacher</p><h2>CORE Phonics results</h2></div>
+    <div id="loginLocal" style="display:grid;gap:12px">
+      <p class="muted">Enter the teacher PIN.</p>
+      <div class="field"><label for="pin">PIN</label><input type="password" id="pin" inputmode="numeric" autocomplete="off"></div>
+      <div class="row"><button class="btn" id="pinBtn" type="button">Open results</button><span class="status" id="pinMsg" style="color:var(--bad)"></span></div>
+    </div>
+    <div id="loginFire" hidden style="display:grid;gap:12px">
+      <p class="muted">Sign in with the Google account named in your Firestore rules.</p>
+      <div class="row"><button class="btn" id="googleBtn" type="button">Sign in with Google</button><span class="status" id="gMsg" style="color:var(--bad)"></span></div>
+    </div>
+    <div><button class="link" id="backHome1" type="button">Back to student start</button></div>
+  </section>
+</main>
+
+<!-- ============ TEACHER DASHBOARD ============ -->
+<main class="wrap wide" id="v-teacher" hidden>
+  <div class="tbar">
+    <div><p class="eyebrow">Teacher results</p><h1>CORE Phonics Check</h1></div>
+    <div class="row">
+      <button class="btn small ghost" id="refreshBtn" type="button">Refresh</button>
+      <button class="btn small ghost" id="csvBtn" type="button">Download CSV</button>
+      <button class="btn small ghost" id="copyBtn" type="button">Copy for Google Sheets</button>
+      <button class="btn small ghost" id="linkBtn" type="button">Student link</button>
+      <button class="btn small ghost" id="jsonBtn" type="button" hidden>Back up (JSON)</button>
+      <label class="btn small ghost" id="importLbl" hidden for="importFile" style="cursor:pointer">Import backup</label>
+      <input type="file" id="importFile" accept="application/json" hidden>
+      <button class="btn small ghost" id="signOutBtn" type="button">Close</button>
+    </div>
+  </div>
+  <p class="notice" id="localNotice" hidden>Local mode: results are saved on this computer only. Add your Firebase settings to the page to collect results from every student device.</p>
+  <section class="card" id="linkCard" hidden>
+    <div><p class="eyebrow">Student link</p><h3>Choose the parts students will read</h3></div>
+    <p class="muted" style="font-size:15px">Parts A–D are letters and sounds (you score these yourself from the recordings). Parts E–L are words and are scored automatically first.</p>
+    <div class="checks" id="partChecks"></div>
+    <div class="linkbox" id="linkOut"></div>
+    <div class="row"><button class="btn small" id="copyLink" type="button">Copy link</button><span class="muted" id="copyMsg"></span></div>
+  </section>
+  <div class="stats" id="stats"></div>
+  <div class="tablewrap"><table>
+    <thead id="thead"></thead>
+    <tbody id="tbody"></tbody>
+  </table></div>
+  <p class="muted" id="emptyMsg" hidden>No tests yet. When a student finishes, their results appear here.</p>
+  <section class="card" id="detail" hidden></section>
+</main>
+
+<script>
+/* =====================================================================
+   SETTINGS
+   ===================================================================== */
+const CONFIG = {
+  firebase: {
+    apiKey: "AIzaSyAlvTecXVHkoR7CZBMZ7rBwP47bN8ynkK0",
+    authDomain: "daybook-3c39c.firebaseapp.com",
+    projectId: "daybook-3c39c",
+    storageBucket: "daybook-3c39c.firebasestorage.app",
+    messagingSenderId: "673483245849",
+    appId: "1:673483245849:web:9101a11007bc527501dd88"
+  },
+  collection: 'coreAttempts',
+  teacherPin: '2468',            // local mode only
+  speechLang: 'en-US',           // speech recognition language
+  defaultParts: 'ABCDEFGHIJKL',  // parts used when the link has no ?parts= (all of the survey)
+  silenceStopMs: 3500,           // stop recording after this much quiet once the student has spoken
+};
+
+/* ======================= TEST CONTENT (CORE Phonics Survey, 2nd ed.) ======================= */
+const R = (w) => ({ kind:'real', w });
+const P = (w) => ({ kind:'pseudo', w });
+const PARTS = {
+  A:{ name:'Letter names — uppercase', type:'letter', max:26, kid:'Say the name of each letter.',
+      lines:[R(['D','A','N','S','X','Z','J','L','H']),R(['T','Y','E','C','O','M','R','P','W']),R(['K','U','G','B','F','Q','V','I'])] },
+  B:{ name:'Letter names — lowercase', type:'letter', max:26, kid:'Say the name of each letter.',
+      lines:[R(['d','a','n','s','x','z','j','l','h']),R(['t','y','e','c','o','m','r','p','w']),R(['k','u','g','b','f','q','v','i'])] },
+  C:{ name:'Consonant sounds', type:'sound', max:21, kid:'Say the SOUND each letter makes (not its name). For c and g, say both sounds if you know them.',
+      lines:[R(['d','l','n','s','x','z','j']),R(['t','y','p','c','h','m','r']),R(['k','w','g','b','f','q','v'])] },
+  D:{ name:'Vowel sounds', type:'vowel', max:10, kid:'For each letter, say its name. Then say the other sound it makes.',
+      lines:[R(['e','i','a','o','u'])] },
+  E:{ name:'Short vowels in CVC words', type:'word', max:15, lines:[R(['sip','mat','let','bun','hog']),R(['rut','fit','bat','hot','set']),P(['nop','sut','dit','pem','fap'])] },
+  F:{ name:'Consonant blends with short vowels', type:'word', max:15, lines:[R(['stop','trap','quit','spell','plan']),R(['silk','fast','sank','lump','held']),P(['nask','dilt','qued','cang','dran'])] },
+  G:{ name:'Short vowels, digraphs and -tch', type:'word', max:15, lines:[R(['when','chop','thin','shut','wick']),R(['dodge','rash','ring','then','match']),P(['chid','shom','dath','phid','futch'])] },
+  H:{ name:'R-controlled vowels', type:'word', max:15, lines:[R(['harm','dirt','form','fern','surf']),R(['worn','pert','bark','turn','bird']),P(['nerm','sirt','gorf','murd','carn'])] },
+  I:{ name:'Long vowel spellings', type:'word', max:15, lines:[R(['tape','key','toe','paid','feet']),R(['leap','boat','tie','ray','blow']),P(['loe','hine','beap','faim','soat'])] },
+  J:{ name:'Variant vowels', type:'word', max:15, lines:[R(['few','down','moon','hawk','coin']),R(['cue','loud','cook','haunt','toy']),P(['voot','rew','fout','zoy','bawk'])] },
+  K:{ name:'Low frequency vowel and consonant spellings', type:'word', max:15, lines:[R(['kneel','cent','type','ghost','wrist']),R(['giant','sweat','gnat','bomb','sigh']),P(['bice','knod','dimb','tigh','wrep'])] },
+  L:{ name:'Multisyllabic words', type:'word', max:24, col:true,
+      rowTypes:['Closed-closed','Closed-silent e','Open/closed-other','Open or closed','Silent e','Consonant -le','r-Controlled','Vowel team'],
+      lines:[R(['unless','competes','depend','zero','locate','stable','further','railways']),
+             R(['consent','admire','radishes','menu','inhaled','dimple','bordered','roaring']),
+             P(['timbut','rompete','podated','gromu','pentate','morkle','darber','fauntoon'])] },
+};
+const ORDER = 'ABCDEFGHIJKL'.split('');
+// Scoring sections, as on the CORE record form's Skills Summary (Part D is scored as long /5 and short /5).
+function sectionsFor(parts){
+  const out = [];
+  ORDER.filter(k => parts.includes(k)).forEach(k => {
+    if(k === 'D'){
+      out.push({ id:'Dl', part:'D', label:'D long', name:'Long vowel sounds', max:5, pick:(mi) => mi % 2 === 0 });
+      out.push({ id:'Ds', part:'D', label:'D short', name:'Short vowel sounds', max:5, pick:(mi) => mi % 2 === 1 });
+    } else out.push({ id:k, part:k, label:k, name:PARTS[k].name, max:PARTS[k].max, pick:() => true });
+  });
+  return out;
+}
+const pct = (n, max) => max ? Math.round(n / max * 100) : 0;
+// Bands from the CORE mastery table.
+function band(n, max){
+  if(max === 24) return n >= 21 ? 'B' : n >= 15 ? 'S' : 'I';
+  if(max === 15) return n >= 14 ? 'B' : n >= 10 ? 'S' : 'I';
+  if(max === 83) return n >= 83 ? 'B' : n >= 65 ? 'S' : 'I';
+  return null;
+}
+const BAND_NAME = { B:'Benchmark', S:'Strategic', I:'Intensive' };
+// Where to start in Walpole & McKenna, How to Plan Differentiated Reading Instruction (2nd ed.).
+function driStart(sc){
+  const below = k => sc[k] && sc[k].band && sc[k].band !== 'B';
+  if(below('E')) return 'Letter Patterns';
+  if(below('F') || below('G')) return 'Blends & Digraphs';
+  if(below('H')) return 'R-Controlled Vowels';
+  if(below('I')) return 'VCe / Vowel Teams';
+  if(below('J')) return 'Vowel Teams';
+  if(['E','F','G','H','I','J'].every(k => sc[k] && sc[k].band)) return 'FAC (fluency & comprehension)';
+  return '';
+}
+
+// Other spellings speech recognition may return for the same spoken word.
+const SOUNDALIKE = {
+  sip:['sipp'], bun:['bunn'], hog:['hogg'], rut:['root','rutt'], fit:['phit'], set:['sett'], quit:['quitt'], held:['helled'],
+  sank:['sanc'], when:['wen'], ring:['wring'], wick:['wic','wik'], match:['mach'], harm:['harmm'], fern:['ferne'], surf:['serf'],
+  worn:['warn'], pert:['purt'], turn:['tern'], bird:['burd'], toe:['tow'], paid:['payed'], feet:['feat'], tie:['thai','tye'],
+  ray:['rae','re'], few:['phew'], hawk:['hock'], cue:['q','queue','kew'], kneel:['neil','neal'], cent:['sent','scent'],
+  gnat:['nat'], bomb:['bom','balm'], sigh:['psi','sy'], wrist:['rist'], sweat:['swet'], zero:['0'], railways:['railway'],
+  roaring:['roring'], further:['farther'], menu:['menue'], toy:['toi'], loud:['lowd'], cook:['cooke'], ghost:['gost'], coin:['coyne']
+};
+const LETTER_NAMES = {
+  a:['a','eh','hey','ay'], b:['b','be','bee'], c:['c','see','sea','si'], d:['d','dee','de'], e:['e','ee'], f:['f','ef','eff'],
+  g:['g','gee','ji'], h:['h','age','aitch','each','hetch'], i:['i','eye','aye'], j:['j','jay'], k:['k','kay','okay','ok','que'],
+  l:['l','el','elle','al'], m:['m','em','um'], n:['n','en','in','and'], o:['o','oh','owe'], p:['p','pee','pea'], q:['q','queue','cue','kew'],
+  r:['r','are','our','ar'], s:['s','es','ess'], t:['t','tea','tee','ti'], u:['u','you','yo'], v:['v','vee','vi'], w:['w','double'],
+  x:['x','ex','axe'], y:['y','why','wise'], z:['z','zee','zed']
+};
+
+/* ======================= HELPERS ======================= */
+const $ = s => document.querySelector(s);
+const VIEWS = ['v-home','v-mic','v-intro','v-read','v-done','v-tlogin','v-teacher'];
+function show(id){ VIEWS.forEach(v => { $('#'+v).hidden = v !== id; }); window.scrollTo(0,0); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const ICON = {
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  stop:'<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>',
+  play:'<svg viewBox="0 0 24 24"><path d="M7 5v14l12-7z" fill="currentColor"/></svg>'
+};
+function blobToB64(blob){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]); r.onerror=()=>rej(r.error); r.readAsDataURL(blob); }); }
+function b64ToBlob(b64, mime){ const bin=atob(b64); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return new Blob([u],{type:mime||'audio/webm'}); }
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('Could not load '+src)); document.head.appendChild(s); }); }
+async function retry(fn, tries=3){ let err; for(let i=0;i<tries;i++){ try{ return await fn(); }catch(e){ err=e; await new Promise(r=>setTimeout(r,800*(i+1))); } } throw err; }
+function lev(a,b){ const m=a.length,n=b.length; const d=Array.from({length:m+1},(_,i)=>[i,...Array(n).fill(0)]); for(let j=1;j<=n;j++) d[0][j]=j; for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1)); return d[m][n]; }
+// Rough spelling-to-sound key so made-up words can be compared with what the recognizer typed.
+function soundKey(w){
+  return w.toLowerCase().replace(/[^a-z]/g,'')
+    .replace(/^kn|^gn/,'n').replace(/^wr/,'r').replace(/mb$/,'m').replace(/igh/g,'i').replace(/ph/g,'f')
+    .replace(/tch/g,'ch').replace(/dge/g,'j').replace(/ck/g,'k').replace(/c(?=[eiy])/g,'s').replace(/c/g,'k').replace(/q/g,'k')
+    .replace(/x/g,'ks').replace(/(ee|ea|ie|ey)/g,'E').replace(/(oa|oe|ow)/g,'O').replace(/(ai|ay)/g,'A')
+    .replace(/(aw|au)/g,'o').replace(/(oo|ew|ue)/g,'U').replace(/(oi|oy)/g,'Y').replace(/(ou)/g,'W')
+    .replace(/([a-z])\1+/g,'$1');
+}
+
+/* ======================= STORAGE: LOCAL (IndexedDB) ======================= */
+const LocalStore = {
+  kind:'local', _db:null,
+  async open(){
+    if(this._db) return this._db;
+    this._db = await new Promise((res,rej)=>{
+      const r = indexedDB.open('corePhonicsCheck',1);
+      r.onupgradeneeded = () => { const d=r.result; d.createObjectStore('attempts',{keyPath:'id'}); d.createObjectStore('audio'); };
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+    return this._db;
+  },
+  async tx(store, mode, fn){
+    const d = await this.open();
+    return new Promise((res,rej)=>{ const t=d.transaction(store,mode); const req=fn(t.objectStore(store)); t.oncomplete=()=>res(req ? req.result : undefined); t.onerror=()=>rej(t.error); });
+  },
+  async create(a){ await this.tx('attempts','readwrite',s=>s.put(a)); },
+  async update(id, patch){ const cur = await this.tx('attempts','readonly',s=>s.get(id)); await this.tx('attempts','readwrite',s=>s.put(Object.assign(cur||{id}, patch))); },
+  async list(){ const all = (await this.tx('attempts','readonly',s=>s.getAll())) || []; return all.sort((a,b)=>b.createdAt-a.createdAt); },
+  async saveAudio(id,key,blob){ await this.tx('audio','readwrite',s=>s.put({blob, mime:blob.type}, id+':'+key)); },
+  async getAudio(id,key){ const r = await this.tx('audio','readonly',s=>s.get(id+':'+key)); return r ? r.blob : null; },
+  async remove(id, keys){ await this.tx('attempts','readwrite',s=>s.delete(id)); await this.tx('audio','readwrite',s=>{ keys.forEach(k=>s.delete(id+':'+k)); }); }
+};
+
+/* ======================= STORAGE: FIREBASE ======================= */
+const FireStore = {
+  kind:'firebase', fs:null, auth:null,
+  async init(){
+    const v='10.14.1', base='https://cdn.jsdelivr.net/npm/firebase@'+v+'/';
+    await loadScript(base+'firebase-app-compat.js');
+    await loadScript(base+'firebase-auth-compat.js');
+    await loadScript(base+'firebase-firestore-compat.js');
+    if(!firebase.apps.length) firebase.initializeApp(CONFIG.firebase);
+    this.fs = firebase.firestore(); this.auth = firebase.auth();
+  },
+  col(){ return this.fs.collection(CONFIG.collection); },
+  async create(a){ await this.col().doc(a.id).set(a); },
+  async update(id, patch){ await this.col().doc(id).update(patch); },
+  async list(){ const q = await this.col().orderBy('createdAt','desc').get(); return q.docs.map(d=>d.data()); },
+  async saveAudio(id,key,blob){ const b64 = await blobToB64(blob); await this.col().doc(id).collection('audio').doc(String(key)).set({ b64, mime: blob.type || 'audio/webm' }); },
+  async getAudio(id,key){ const d = await this.col().doc(id).collection('audio').doc(String(key)).get(); return d.exists ? b64ToBlob(d.data().b64, d.data().mime) : null; },
+  async remove(id){ const sub = await this.col().doc(id).collection('audio').get(); await Promise.all(sub.docs.map(d=>d.ref.delete())); await this.col().doc(id).delete(); }
+};
+
+let store = LocalStore;
+const LOCAL_ONLY = new URLSearchParams(location.search).get('local') === '1';
+let storeReady = (async () => {
+  if(CONFIG.firebase && !LOCAL_ONLY){ try{ await FireStore.init(); store = FireStore; } catch(e){ console.error(e); store = LocalStore; } }
+})();
+
+/* ======================= WHICH PARTS ======================= */
+function parsePartsParam(){
+  const raw = (new URLSearchParams(location.search).get('parts') || CONFIG.defaultParts).toUpperCase();
+  let set = new Set();
+  raw.replace(/([A-L])-([A-L])/g, (m,a,b) => { for(let i=ORDER.indexOf(a); i<=ORDER.indexOf(b); i++) set.add(ORDER[i]); return ''; })
+     .replace(/[A-L]/g, c => { set.add(c); return ''; });
+  const list = ORDER.filter(k => set.has(k));
+  return list.length ? list : CONFIG.defaultParts.split('');
+}
+const RUN_PARTS = parsePartsParam();
+$('#partsNote').textContent = 'Today: Part' + (RUN_PARTS.length > 1 ? 's ' : ' ') + (RUN_PARTS.length > 2 && RUN_PARTS.join('') === ORDER.slice(ORDER.indexOf(RUN_PARTS[0]), ORDER.indexOf(RUN_PARTS[0]) + RUN_PARTS.length).join('') ? RUN_PARTS[0] + ' to ' + RUN_PARTS[RUN_PARTS.length-1] : RUN_PARTS.join(', ')) + '. It takes about ' + Math.max(5, RUN_PARTS.length * 2) + ' minutes.';
+
+/* Build the list of lines (one recording each) for a set of parts. */
+function buildLines(parts){
+  const out = [];
+  parts.forEach(k => {
+    const P = PARTS[k];
+    P.lines.forEach((ln, li) => {
+      let marks;
+      if(P.type === 'vowel') marks = ln.w.flatMap(v => [{ w: v+' · long', auto:'none', final:null }, { w: v+' · short', auto:'none', final:null }]);
+      else marks = ln.w.map(w => ({ w, auto:'none', final:null }));
+      out.push({ key: k+'-'+li, part: k, li, kind: ln.kind, words: ln.w, marks, audio:false, heard:[], status:'todo' });
+    });
+  });
+  return out;
+}
+
+/* ======================= AUTO-SCORING ======================= */
+function tokensOf(heard){
+  const toks = new Set();
+  heard.forEach(t => t.toLowerCase().replace(/[^a-z0-9' ]/g,' ').split(/\s+/).filter(Boolean).forEach(x => { toks.add(x); toks.add(x.replace(/'s$/,'')); }));
+  return [...toks];
+}
+function autoScore(line, heard, partType){
+  const SRok = !!SR;
+  if(!SRok || partType === 'sound' || partType === 'vowel') return line.marks.map(m => ({ ...m, auto:'none' }));
+  if(!heard.length) return line.marks.map(m => ({ ...m, auto:'silent' }));
+  const toks = tokensOf(heard);
+  return line.marks.map(m => {
+    const w = m.w.toLowerCase();
+    if(partType === 'letter'){
+      const ok = LETTER_NAMES[w] || [w];
+      const hit = toks.some(t => ok.includes(t));
+      return { ...m, auto: hit ? 'match' : 'nomatch' };
+    }
+    if(line.kind === 'real'){
+      const ok = [w, ...(SOUNDALIKE[w] || [])];
+      return { ...m, auto: toks.some(t => ok.includes(t)) ? 'match' : 'nomatch' };
+    }
+    // Made-up word: the recognizer cannot type it exactly, so look for something close in sound or spelling.
+    const key = soundKey(w), tol = w.length >= 6 ? 2 : 1;
+    const close = toks.some(t => /^[a-z]+$/.test(t) && (soundKey(t) === key || lev(t, w) <= tol || lev(soundKey(t), key) <= (w.length >= 6 ? 1 : 0)));
+    return { ...m, auto: close ? 'likely' : 'nomatch' };
+  });
+}
+// Teacher decision wins. Otherwise: recognizer match counts as right; 'likely' counts as right but stays flagged; everything else waits for the teacher.
+function verdict(m){ if(m.final === true || m.final === false) return m.final; if(m.auto === 'match' || m.auto === 'likely') return true; if(m.auto === 'skipped') return false; return null; }
+function needsCheck(m){ return (m.final !== true && m.final !== false) && m.auto !== 'match' && m.auto !== 'skipped'; }
+
+/* ======================= STUDENT FLOW ======================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+$('#browserNote').textContent = SR ? '' : 'Tip: Chrome or Edge works best.';
+let att = null, saveErrors = 0, pending = [];
+function track(p){ const q = p.catch(e => { console.error(e); saveErrors++; }); pending.push(q); return q; }
+
+$('#startForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('#stuName').value.trim(); if(!name) return;
+  $('#startBtn').disabled = true;
+  await storeReady;
+  att = { id: uid(), name, group: $('#stuGroup').value, createdAt: Date.now(), status:'in_progress', parts: RUN_PARTS, lines: buildLines(RUN_PARTS), recog: !!SR, ua: navigator.userAgent.slice(0,120) };
+  saveErrors = 0; pending = [];
+  track(retry(()=>store.create(att)));
+  $('#startBtn').disabled = false;
+  startMic();
+});
+
+/* ---------- microphone ---------- */
+let stream = null, actx = null, analyser = null, meterTarget = null, meterRaf = 0, level = 0;
+function startMeter(el){
+  meterTarget = el; cancelAnimationFrame(meterRaf);
+  const data = new Uint8Array(analyser.fftSize);
+  const loop = () => {
+    analyser.getByteTimeDomainData(data);
+    let peak = 0; for(const v of data) peak = Math.max(peak, Math.abs(v-128));
+    level = peak;
+    if(meterTarget) meterTarget.style.width = Math.min(100, peak/64*100) + '%';
+    meterRaf = requestAnimationFrame(loop);
+  };
+  loop();
+}
+function startMic(){
+  show('v-mic');
+  $('#micAsk').hidden = false; $('#micOk').hidden = true; $('#micNo').hidden = true;
+  if(stream){ $('#micAsk').hidden = true; $('#micOk').hidden = false; startMeter($('#checkMeter')); }
+}
+async function openMic(){
+  try{
+    if(!navigator.mediaDevices || !window.MediaRecorder) throw new Error('no recorder');
+    stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } });
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = actx.createAnalyser(); analyser.fftSize = 1024;
+    actx.createMediaStreamSource(stream).connect(analyser);
+    $('#micAsk').hidden = true; $('#micOk').hidden = false; $('#micNo').hidden = true; startMeter($('#checkMeter'));
+  } catch(e){ console.error(e); $('#micAsk').hidden = true; $('#micNo').hidden = false; }
+}
+$('#micBtn').onclick = openMic;
+$('#micRetry').onclick = openMic;
+$('#micGo').onclick = () => { li = 0; showIntroOrLine(); };
+
+/* ---------- parts and lines ---------- */
+let li = 0, recording = false, stopFn = null, lastTake = null, introShownFor = null;
+function partIntroText(k){
+  const P = PARTS[k];
+  if(P.type === 'word' && k === 'L') return 'Long words! Read each list from top to bottom. The last list has made-up words.';
+  if(P.type === 'word') return 'Read each word out loud, from left to right. The last line has made-up words. Sound them out.';
+  return P.kid;
+}
+function showIntroOrLine(){
+  const line = att.lines[li];
+  if(introShownFor !== line.part && line.li === 0){
+    introShownFor = line.part;
+    const P = PARTS[line.part];
+    $('#introEyebrow').textContent = 'Part ' + line.part + ' · ' + (RUN_PARTS.indexOf(line.part)+1) + ' of ' + RUN_PARTS.length;
+    $('#introTitle').textContent = P.type === 'letter' ? 'Letter names' : P.type === 'sound' ? 'Letter sounds' : P.type === 'vowel' ? 'Vowel sounds' : 'Read the words';
+    $('#introText').textContent = partIntroText(line.part);
+    show('v-intro');
+    return;
+  }
+  renderLine();
+}
+$('#introGo').onclick = () => renderLine();
+
+function renderLine(){
+  const line = att.lines[li], P = PARTS[line.part]; lastTake = null;
+  show('v-read');
+  $('#readPart').textContent = 'Part ' + line.part;
+  $('#readCount').textContent = (li+1) + ' of ' + att.lines.length;
+  $('#readBar').style.width = (li / att.lines.length * 100) + '%';
+  const pseudo = line.kind === 'pseudo';
+  const tag = $('#readTag');
+  tag.hidden = P.type !== 'word';
+  tag.className = 'tag ' + (pseudo ? 'pseudo' : 'real');
+  tag.textContent = pseudo ? 'Made-up words' : 'Real words';
+  const box = $('#readLine');
+  box.className = 'readline' + (pseudo ? ' pseudo' : '') + (P.col ? ' col' : '') + (P.type !== 'word' ? ' letters' : '');
+  box.innerHTML = line.words.map(w => '<span>' + esc(w) + '</span>').join('');
+  $('#readHint').textContent = pseudo ? "These are NOT real words. Sound them out. Don't try to make them real words."
+    : P.col ? 'Read from the top to the bottom.'
+    : P.type === 'letter' ? 'Say the letter names, from left to right.'
+    : P.type === 'sound' ? 'Say the sound of each letter, from left to right.'
+    : P.type === 'vowel' ? 'Say each letter name, then its other sound.'
+    : 'Read the words from left to right.';
+  $('#recMsg').textContent = 'Tap the microphone, then read.';
+  $('#againBtn').hidden = true; $('#nextBtn').hidden = true; $('#skipBtn').hidden = false;
+  $('#recBtn').hidden = false; $('#recBtn').disabled = false; $('#recBtn').innerHTML = ICON.mic;
+  startMeter($('#recMeter'));
+}
+function pickMime(){
+  for(const m of ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'])
+    if(window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) return m;
+  return '';
+}
+function recordLine(maxMs){
+  return new Promise(resolve => {
+    const heard = [], chunks = [], mime = pickMime();
+    let blob = null, recDone = !SR, stopped = false, resolved = false, timer = 0, recog = null, quietTimer = 0, spoke = false;
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: 24000 } : {});
+    const finish = () => { if(!resolved && blob && recDone){ resolved = true; clearInterval(quietTimer); resolve({ blob, heard }); } };
+    const stop = () => {
+      if(stopped) return; stopped = true; clearTimeout(timer); clearInterval(quietTimer);
+      try{ if(rec.state !== 'inactive') rec.stop(); }catch(e){}
+      try{ recog && recog.stop(); }catch(e){}
+      setTimeout(() => { recDone = true; finish(); }, 1800);
+    };
+    rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = () => { blob = new Blob(chunks, { type: rec.mimeType || mime || 'audio/webm' }); finish(); };
+    if(SR){
+      try{
+        recog = new SR(); recog.lang = CONFIG.speechLang; recog.maxAlternatives = 5; recog.interimResults = false; recog.continuous = true;
+        recog.onresult = e => { for(let i = e.resultIndex; i < e.results.length; i++){ const r = e.results[i]; for(let k=0;k<r.length;k++) heard.push(r[k].transcript); } };
+        recog.onerror = () => {};
+        recog.onend = () => { if(!stopped){ try{ recog.start(); return; }catch(e){} } recDone = true; finish(); };
+        recog.start();
+      }catch(e){ recDone = true; }
+    }
+    rec.start(250);
+    // Stop by itself after a long quiet spell once the student has started reading.
+    let lastLoud = Date.now();
+    quietTimer = setInterval(() => {
+      if(level > 10){ spoke = true; lastLoud = Date.now(); }
+      else if(spoke && Date.now() - lastLoud > CONFIG.silenceStopMs) stop();
+    }, 100);
+    timer = setTimeout(stop, maxMs);
+    stopFn = stop;
+  });
+}
+$('#recBtn').onclick = async () => {
+  if(recording){ $('#recMsg').textContent = 'Saving…'; stopFn && stopFn(); return; }
+  recording = true;
+  const line = att.lines[li], P = PARTS[line.part];
+  const btn = $('#recBtn'); btn.classList.add('on'); btn.innerHTML = ICON.stop;
+  $('#recMsg').textContent = 'Recording… read now. Tap the square when you finish.';
+  $('#againBtn').hidden = true; $('#nextBtn').hidden = true; $('#skipBtn').hidden = true;
+  const maxMs = P.col ? 30000 : P.type === 'word' ? 18000 : 25000;
+  const take = await recordLine(maxMs);
+  recording = false; btn.classList.remove('on'); btn.innerHTML = ICON.mic;
+  lastTake = take; btn.hidden = true;
+  $('#recMsg').textContent = 'Got it!';
+  $('#againBtn').hidden = false; $('#nextBtn').hidden = false;
+};
+$('#againBtn').onclick = () => { lastTake = null; $('#recBtn').hidden = false; $('#againBtn').hidden = true; $('#nextBtn').hidden = true; $('#skipBtn').hidden = false; $('#recMsg').textContent = 'Tap the microphone, then read.'; };
+$('#nextBtn').onclick = () => commitLine(false);
+$('#skipBtn').onclick = () => commitLine(true);
+function commitLine(skipped){
+  const line = att.lines[li], P = PARTS[line.part];
+  if(skipped || !lastTake){
+    line.status = 'skipped'; line.audio = false;
+    line.marks = line.marks.map(m => ({ ...m, auto:'skipped' }));
+  } else {
+    const heard = [...new Set(lastTake.heard.map(h=>h.trim()).filter(Boolean))].slice(0,12);
+    line.status = 'read'; line.audio = true; line.heard = heard;
+    line.marks = autoScore(line, heard, P.type);
+    const blob = lastTake.blob, id = att.id, key = line.key;
+    track(retry(()=>store.saveAudio(id, key, blob)));
+  }
+  const lines = att.lines.map(x => ({ ...x }));
+  track(retry(()=>store.update(att.id, { lines })));
+  li++;
+  if(li < att.lines.length) showIntroOrLine();
+  else finishTest();
+}
+async function finishTest(){
+  cancelAnimationFrame(meterRaf);
+  show('v-done');
+  $('#doneMsg').textContent = 'Saving your reading… please wait.';
+  $('#homeBtn').hidden = true;
+  await Promise.all(pending);
+  try{ await retry(()=>store.update(att.id, { status:'done', finishedAt: Date.now() })); }catch(e){ saveErrors++; }
+  $('#doneMsg').textContent = saveErrors ? 'Some of your reading did not save. Please tell your teacher.' : 'Your reading is saved. Great work!';
+  $('#homeBtn').hidden = false;
+}
+$('#homeBtn').onclick = () => { $('#stuName').value = ''; att = null; introShownFor = null; show('v-home'); };
+
+/* ======================= TEACHER ======================= */
+let rows = [], selId = null;
+$('#teacherLink').onclick = async () => {
+  await storeReady;
+  show('v-tlogin');
+  const fire = store.kind === 'firebase';
+  $('#loginLocal').hidden = fire; $('#loginFire').hidden = !fire;
+  if(fire && store.auth.currentUser) openDashboard();
+};
+$('#backHome1').onclick = () => show('v-home');
+$('#pinBtn').onclick = () => { if($('#pin').value === CONFIG.teacherPin){ $('#pin').value=''; $('#pinMsg').textContent=''; openDashboard(); } else $('#pinMsg').textContent = 'That PIN is not right.'; };
+$('#pin').addEventListener('keydown', e => { if(e.key === 'Enter') $('#pinBtn').click(); });
+$('#googleBtn').onclick = async () => {
+  try{ await store.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); openDashboard(); }
+  catch(e){ $('#gMsg').textContent = 'Sign-in did not finish: ' + (e.code || e.message); }
+};
+$('#signOutBtn').onclick = async () => { stopAudio(); if(store.kind === 'firebase'){ try{ await store.auth.signOut(); }catch(e){} } show('v-home'); };
+$('#refreshBtn').onclick = () => loadRows();
+
+async function openDashboard(){
+  show('v-teacher');
+  const local = store.kind === 'local';
+  $('#localNotice').hidden = !local; $('#jsonBtn').hidden = !local; $('#importLbl').hidden = !local;
+  await loadRows();
+}
+async function loadRows(){
+  try{ rows = await store.list(); }
+  catch(e){
+    rows = [];
+    $('#stats').innerHTML = '<p class="notice">Could not read results (' + esc(e.code || e.message) + '). Check that this Google account is the teacher email in your Firestore rules, and that the coreAttempts rules are published.</p>';
+    $('#tbody').innerHTML = ''; $('#thead').innerHTML = ''; return;
+  }
+  renderTable();
+  if(selId && rows.find(r=>r.id===selId)) renderDetail(selId); else { $('#detail').hidden = true; selId = null; }
+}
+
+function summarize(a){
+  const secs = sectionsFor(a.parts || []);
+  const sc = {}; let toCheck = 0;
+  secs.forEach(x => sc[x.id] = { ...x, n:0, check:0, read:0, done:false, band:null, missed:[] });
+  const byPart = {}; secs.forEach(x => (byPart[x.part] = byPart[x.part] || []).push(sc[x.id]));
+  (a.lines || []).forEach(line => {
+    const list = byPart[line.part]; if(!list) return;
+    if(line.status === 'todo') return;
+    list.forEach(s => s.read++);
+    line.marks.forEach((m, mi) => {
+      const s = list.find(x => x.pick(mi)); if(!s) return;
+      const v = verdict(m);
+      if(v === true) s.n++;
+      else if(v === false) s.missed.push(m.w);
+      if(needsCheck(m)){ s.check++; toCheck++; }
+    });
+  });
+  Object.values(sc).forEach(s => { s.done = s.read === PARTS[s.part].lines.length; s.band = s.done && s.check === 0 ? band(s.n, s.max) : null; s.pct = pct(s.n, s.max); });
+  const all = Object.values(sc);
+  const total = { n: all.reduce((t,s)=>t+s.n,0), max: all.reduce((t,s)=>t+s.max,0) }; total.pct = pct(total.n, total.max);
+  const alphaIds = ['A','B','C','Dl','Ds'];
+  const alpha = alphaIds.every(id => sc[id] && sc[id].done && sc[id].check === 0) ? alphaIds.reduce((t,id)=>t+sc[id].n,0) : null;
+  const partDone = {}; ORDER.forEach(k => { const l = byPart[k]; if(l) partDone[k] = { done: l.every(x=>x.done), band: l[0].band }; });
+  return { sc, secs, total, toCheck, alpha, alphaBand: alpha === null ? null : band(alpha, 83), dri: driStart(partDone) };
+}
+function sectionsInView(){ const set = new Set(); rows.forEach(r => (r.parts||[]).forEach(k => set.add(k))); return sectionsFor([...set]); }
+const BAND_CLS = { B:'good', S:'warn', I:'bad' };
+function scoreCell(p){
+  if(!p) return '<td class="muted">–</td>';
+  return '<td class="num"><span class="score">'+p.n+' / '+p.max+' · '+p.pct+'%'+(p.band ? '<small class="'+p.band+'">'+BAND_NAME[p.band]+'</small>' : (!p.done ? '<small>not done</small>' : p.check ? '<small class="S">'+p.check+' to check</small>' : ''))+'</span></td>';
+}
+function renderTable(){
+  const secs = sectionsInView(), hasAlpha = secs.some(x => 'ABCD'.includes(x.part));
+  $('#thead').innerHTML = '<tr><th>Student</th><th>Group</th><th>Date</th>' + secs.map(x => '<th title="'+esc(x.name)+'">'+x.label+'</th>').join('') + (hasAlpha ? '<th title="Letter names and sounds, A to D">A–D</th>' : '') + '<th>Total</th><th>To check</th><th>DRI start</th></tr>';
+  const tb = $('#tbody'); tb.innerHTML = '';
+  $('#emptyMsg').hidden = rows.length > 0;
+  const sums = rows.map(summarize);
+  const done = rows.filter(r=>r.status==='done');
+  const totalCheck = sums.reduce((s,x)=>s+x.toCheck,0);
+  const groups = {}; sums.forEach(s => { if(s.dri) groups[s.dri] = (groups[s.dri]||0) + 1; });
+  const doneSums = sums.filter((_, i) => rows[i].status === 'done');
+  const avgPct = doneSums.length ? Math.round(doneSums.reduce((t,s)=>t+s.total.pct,0) / doneSums.length) + '%' : '–';
+  $('#stats').innerHTML =
+    '<div class="stat"><b>'+done.length+'</b><span>finished</span></div>'+
+    '<div class="stat"><b>'+avgPct+'</b><span>average total score</span></div>'+
+    '<div class="stat"><b>'+totalCheck+'</b><span>items still to check</span></div>'+
+    '<div class="stat" style="grid-column:span 2"><b style="font-size:17px">'+(Object.entries(groups).map(([g,n])=>esc(g)+': '+n).join(' · ') || '–')+'</b><span>suggested DRI starting points</span></div>';
+  rows.forEach((a, idx) => {
+    const s = sums[idx];
+    const tr = document.createElement('tr'); if(a.id === selId) tr.className = 'sel';
+    const d = new Date(a.createdAt);
+    tr.innerHTML = '<td><b>'+esc(a.name)+'</b>'+(a.status==='done'?'':' <span class="pill mute">not finished</span>')+'</td><td>'+esc(a.group)+'</td><td>'+d.toLocaleDateString()+'</td>'+
+      secs.map(x => scoreCell(s.sc[x.id])).join('') +
+      (hasAlpha ? '<td class="num">'+(s.alpha===null?'–':'<span class="score">'+s.alpha+' / 83 · '+pct(s.alpha,83)+'%<small class="'+s.alphaBand+'">'+BAND_NAME[s.alphaBand]+'</small></span>')+'</td>' : '') +
+      '<td class="num"><span class="score">'+s.total.n+' / '+s.total.max+'<small>'+s.total.pct+'%</small></span></td>'+
+      '<td>'+(s.toCheck ? '<span class="pill warn">'+s.toCheck+'</span>' : '<span class="pill good">done</span>')+'</td><td>'+(s.dri?'<span class="pill p">'+esc(s.dri)+'</span>':'')+'</td>';
+    tr.onclick = () => { selId = a.id; renderTable(); renderDetail(a.id); $('#detail').scrollIntoView({behavior:'smooth', block:'start'}); };
+    tb.appendChild(tr);
+  });
+}
+
+/* ---------- playback ---------- */
+let curAudio = null, curUrl = null, rate = 1;
+function stopAudio(){ if(curAudio){ curAudio.pause(); curAudio = null; } if(curUrl){ URL.revokeObjectURL(curUrl); curUrl = null; } }
+async function playLine(a, key, btn){
+  if(curAudio && btn.dataset.playing === '1'){ stopAudio(); btn.dataset.playing = ''; btn.innerHTML = ICON.play; return; }
+  stopAudio(); document.querySelectorAll('[data-playing="1"]').forEach(b => { b.dataset.playing=''; b.innerHTML = ICON.play; });
+  try{
+    btn.innerHTML = '…';
+    const blob = await store.getAudio(a.id, key); if(!blob) throw new Error('missing');
+    curUrl = URL.createObjectURL(blob); curAudio = new Audio(curUrl); curAudio.playbackRate = rate;
+    btn.dataset.playing = '1'; btn.innerHTML = ICON.stop;
+    curAudio.onended = () => { btn.dataset.playing=''; btn.innerHTML = ICON.play; stopAudio(); };
+    await curAudio.play();
+  }catch(e){ btn.innerHTML = ICON.play; btn.title = 'Recording not found'; btn.style.opacity = .4; }
+}
+
+function chipClass(m){ const v = verdict(m); if(m.final === true) return 't'; if(m.final === false) return 'f'; if(v === true && m.auto === 'match') return 't auto'; if(m.auto === 'skipped') return 'f auto'; return 'q'; }
+function chipMark(m){ if(m.final === true) return '✓'; if(m.final === false) return '✗'; if(m.auto === 'match') return '✓?'; if(m.auto === 'likely') return '≈'; if(m.auto === 'skipped') return 'skip'; return '?'; }
+
+function renderDetail(id){
+  const a = rows.find(r=>r.id===id); if(!a) return;
+  const s = summarize(a); const el = $('#detail'); el.hidden = false;
+  const head = '<div class="tbar"><div><p class="eyebrow">'+esc(a.group)+' · '+new Date(a.createdAt).toLocaleString()+'</p><h2>'+esc(a.name)+'</h2></div>'+
+    '<div class="row"><span class="pill mute" style="font-size:15px">Total: '+s.total.n+' / '+s.total.max+' · '+s.total.pct+'%</span>'+(s.alpha!==null?'<span class="pill mute">A–D: '+s.alpha+' / 83 · '+pct(s.alpha,83)+'%</span>':'')+(s.dri?'<span class="pill p">DRI start: '+esc(s.dri)+'</span>':'')+(s.toCheck?'<span class="pill warn">'+s.toCheck+' to check</span>':'<span class="pill good">all checked</span>')+
+    '<button class="btn small ghost" id="rateBtn" type="button">Speed: '+(rate===1?'normal':'slow')+'</button></div></div>'+
+    '<div class="legend"><span>Tap a word to change it:</span><span class="wchip t">✓ right</span><span class="wchip f">✗ wrong</span><span class="wchip t auto">✓? computer heard it</span><span class="wchip q">≈ / ? check</span><span>Dashed = the computer\'s guess.</span></div>';
+  let body = '';
+  (a.parts || []).forEach(k => {
+    const P = PARTS[k], pss = s.secs.filter(x => x.part === k).map(x => s.sc[x.id]);
+    const scoreTxt = pss.map(ps => '<b>'+(pss.length>1 ? esc(ps.name.replace(' sounds',''))+': ' : '')+ps.n+' / '+ps.max+' · '+ps.pct+'%</b>'+(ps.band?'<span class="pill '+BAND_CLS[ps.band]+'">'+BAND_NAME[ps.band]+'</span>':'')).join('');
+    const chk = pss.reduce((t,x)=>t+x.check,0);
+    let html = '<div class="partbox"><div class="tbar"><h3>Part '+k+' · '+esc(P.name)+'</h3><span class="score" style="flex-direction:row;gap:8px;align-items:center;flex-wrap:wrap">'+scoreTxt+(chk?'<span class="pill warn">'+chk+' to check</span>':'')+'</span></div>';
+    if(P.type === 'sound' || P.type === 'vowel') html += '<p class="muted" style="font-size:14px">The computer can\'t score letter sounds. Listen and mark each one.'+(k==='C'?' For c and g, either sound counts (CORE asks for both).':'')+(k==='D'?' Long = letter name; short = short vowel sound.':'')+'</p>';
+    a.lines.forEach((line, lnIdx) => {
+      if(line.part !== k) return;
+      const label = P.type === 'word' ? (line.kind === 'pseudo' ? '<span class="pill p">made-up</span>' : '<span class="pill good">real</span>') : '';
+      const heard = line.status === 'skipped' ? 'Student said these were too hard.' : line.status === 'todo' ? 'Not reached.' : (line.heard && line.heard.length ? 'Computer heard: '+esc(line.heard.slice(0,3).join(' / ')) : (a.recog ? 'Computer heard no words.' : 'No speech recognition on that device.'));
+      html += '<div class="lineitem"><div class="acts">'+(line.audio ? '<button class="iconbtn" data-play="'+esc(line.key)+'" aria-label="Play recording" type="button">'+ICON.play+'</button>' : '')+
+        (line.status !== 'todo' ? '<button class="iconbtn" data-all="'+lnIdx+'" data-val="1" type="button" title="Mark the whole line right">all ✓</button><button class="iconbtn" data-all="'+lnIdx+'" data-val="0" type="button" title="Mark the whole line wrong">all ✗</button>' : '')+'</div>'+
+        '<div style="display:grid;gap:6px;min-width:0"><div class="row" style="gap:8px">'+label+(P.rowTypes && line.kind==='pseudo'?'':'')+'</div><div class="wchips">'+
+        line.marks.map((m, mi) => '<button type="button" class="wchip '+chipClass(m)+'" data-ln="'+lnIdx+'" data-mi="'+mi+'"'+(line.status==='todo'?' disabled':'')+'>'+esc(m.w)+'<span class="mk">'+chipMark(m)+'</span></button>').join('')+
+        '</div><span class="heard">'+heard+'</span></div></div>';
+    });
+    if(k === 'L'){
+      const typeMiss = P.rowTypes.map((t, r) => { const got = a.lines.filter(l => l.part==='L').reduce((n, l) => n + (verdict(l.marks[r]) === true ? 1 : 0), 0); return got + '/3 ' + t; });
+      html += '<p class="muted" style="font-size:14px">By syllable type: ' + esc(typeMiss.join(' · ')) + '</p>';
+    }
+    body += html + '</div>';
+  });
+  el.innerHTML = head + body + '<div id="delZone"><button class="btn small ghost" id="delBtn" type="button">Delete this test</button></div>';
+  $('#rateBtn').onclick = () => { rate = rate === 1 ? 0.75 : 1; if(curAudio) curAudio.playbackRate = rate; $('#rateBtn').textContent = 'Speed: '+(rate===1?'normal':'slow'); };
+  el.querySelectorAll('[data-play]').forEach(b => b.onclick = () => playLine(a, b.dataset.play, b));
+  const save = async () => { renderTable(); renderDetail(a.id); try{ await store.update(a.id, { lines: a.lines }); }catch(e){ alertInline('Could not save that change: ' + (e.code || e.message)); } };
+  el.querySelectorAll('[data-mi]').forEach(b => b.onclick = () => {
+    const m = a.lines[+b.dataset.ln].marks[+b.dataset.mi];
+    const cur = verdict(m);
+    m.final = (m.final === true) ? false : (m.final === false) ? true : (cur === true ? false : true);
+    keepScroll(save);
+  });
+  el.querySelectorAll('[data-all]').forEach(b => b.onclick = () => {
+    const val = b.dataset.val === '1';
+    a.lines[+b.dataset.all].marks.forEach(m => m.final = val);
+    keepScroll(save);
+  });
+  $('#delBtn').onclick = () => {
+    $('#delZone').innerHTML = '<div class="confirm"><span>Delete <b>'+esc(a.name)+'</b>\'s test and recordings for good?</span><button class="btn small bad" id="delYes" type="button">Delete</button><button class="btn small ghost" id="delNo" type="button">Keep it</button></div>';
+    $('#delNo').onclick = () => renderDetail(a.id);
+    $('#delYes').onclick = async () => { try{ stopAudio(); await store.remove(a.id, a.lines.map(l=>l.key)); selId = null; await loadRows(); }catch(e){ alertInline('Could not delete: '+(e.code||e.message)); } };
+  };
+}
+function keepScroll(fn){ const y = window.scrollY; fn(); requestAnimationFrame(() => window.scrollTo(0, y)); }
+function alertInline(msg){ const p = document.createElement('p'); p.className='notice'; p.textContent = msg; $('#detail').prepend(p); setTimeout(()=>p.remove(), 6000); }
+
+/* ---------- student link builder ---------- */
+$('#linkBtn').onclick = () => {
+  const card = $('#linkCard'); card.hidden = !card.hidden; if(card.hidden) return;
+  const cur = new Set(RUN_PARTS);
+  $('#partChecks').innerHTML = ORDER.map(k => '<label><input type="checkbox" value="'+k+'"'+(cur.has(k)?' checked':'')+'> '+k+' <span class="muted" style="font-weight:400;font-size:13px">'+esc(PARTS[k].name)+'</span></label>').join('');
+  const update = () => {
+    const sel = [...$('#partChecks').querySelectorAll('input:checked')].map(i=>i.value).join('');
+    const url = new URL(location.href); url.search = sel ? '?parts=' + sel : ''; url.hash = '';
+    $('#linkOut').textContent = url.toString();
+  };
+  $('#partChecks').onchange = update; update();
+};
+$('#copyLink').onclick = async () => { try{ await navigator.clipboard.writeText($('#linkOut').textContent); $('#copyMsg').textContent = 'Copied!'; }catch(e){ $('#copyMsg').textContent = 'Select the link and copy it.'; } setTimeout(()=>$('#copyMsg').textContent='', 2500); };
+
+/* ---------- exports ---------- */
+function tableData(){
+  const secs = sectionsInView(), hasAlpha = secs.some(x => 'ABCD'.includes(x.part));
+  const head = ['Student','Group','Date','Status', ...secs.flatMap(x => [x.label+' '+x.name+' (/'+x.max+')', x.label+' %', x.label+' level'])];
+  if(hasAlpha) head.push('A–D total (/83)','A–D %','A–D level');
+  head.push('Total score','Total possible','Total %','Still to check','DRI starting point', ...secs.map(x => x.label+' missed'));
+  const lines = [head];
+  rows.forEach(a => {
+    const s = summarize(a);
+    const r = [a.name, a.group, new Date(a.createdAt).toLocaleString(), a.status];
+    secs.forEach(x => { const p = s.sc[x.id]; r.push(p ? p.n : '', p ? p.pct + '%' : '', p && p.band ? BAND_NAME[p.band] : (p && !p.done ? 'not finished' : p && p.check ? 'to check' : '')); });
+    if(hasAlpha) r.push(s.alpha ?? '', s.alpha === null ? '' : pct(s.alpha,83) + '%', s.alphaBand ? BAND_NAME[s.alphaBand] : '');
+    r.push(s.total.n, s.total.max, s.total.pct + '%', s.toCheck, s.dri, ...secs.map(x => s.sc[x.id] ? s.sc[x.id].missed.join(' ') : ''));
+    lines.push(r);
+  });
+  return lines;
+}
+function download(name, text, type){
+  const url = URL.createObjectURL(new Blob([text], {type}));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+$('#csvBtn').onclick = () => {
+  const csv = tableData().map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  download('core-phonics-results.csv', '﻿'+csv, 'text/csv');
+};
+$('#copyBtn').onclick = async () => {
+  const tsv = tableData().map(r => r.map(c => String(c).replace(/[\t\n]/g,' ')).join('\t')).join('\n');
+  try{ await navigator.clipboard.writeText(tsv); $('#copyBtn').textContent = 'Copied! Paste into Sheets'; }catch(e){ $('#copyBtn').textContent = 'Copy failed: use CSV'; }
+  setTimeout(()=>$('#copyBtn').textContent='Copy for Google Sheets', 3000);
+};
+$('#jsonBtn').onclick = async () => {
+  const out = [];
+  for(const a of rows){
+    const audio = {};
+    for(const l of (a.lines||[])) if(l.audio){ const b = await store.getAudio(a.id, l.key); if(b) audio[l.key] = { b64: await blobToB64(b), mime: b.type }; }
+    out.push({ ...a, _audio: audio });
+  }
+  download('core-phonics-backup.json', JSON.stringify(out), 'application/json');
+};
+$('#importFile').onchange = async e => {
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    const data = JSON.parse(await f.text());
+    for(const a of data){
+      const { _audio, ...rec } = a; await store.create(rec);
+      for(const [k, v] of Object.entries(_audio || {})) await store.saveAudio(rec.id, k, b64ToBlob(v.b64, v.mime));
+    }
+    await loadRows();
+  }catch(err){ alertInline('That file could not be imported.'); }
+  e.target.value = '';
+};
+</script>
+</body>
+</html>
