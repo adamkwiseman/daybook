@@ -123,6 +123,11 @@ td.num{font-variant-numeric:tabular-nums;font-weight:700}
 .confirm{background:var(--bad-soft);border-radius:12px;padding:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .checks{display:flex;flex-wrap:wrap;gap:8px}
 .checks label{border:2px solid var(--line);border-radius:10px;padding:6px 10px;display:flex;gap:6px;align-items:center;font-weight:700;cursor:pointer}
+.turnin{display:grid;gap:12px}
+.tstep{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;background:var(--paper);border-radius:14px;padding:14px 16px;font-size:19px}
+.tnum{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:20px}
+.dropzone{display:grid;gap:8px;border:2px dashed var(--line);border-radius:16px;padding:16px 18px;background:var(--card)}
+.dropzone.over{border-color:var(--accent);background:var(--accent-soft)}
 .linkbox{font-family:ui-monospace,monospace;font-size:14px;background:var(--paper);border-radius:10px;padding:10px;overflow-wrap:anywhere}
 @media (max-width:560px){
   h1{font-size:28px} .card{padding:20px}
@@ -144,6 +149,7 @@ td.num{font-variant-numeric:tabular-nums;font-weight:700}
       <div class="step"><b>Tap stop</b><span class="muted">Then go to the next line. Do your best!</span></div>
     </div>
     <p class="muted" id="partsNote"></p>
+    <div class="notice" id="resumeBox" hidden style="display:grid;gap:10px"><span id="resumeText"></span><div class="row"><button class="btn small" id="resumeBtn" type="button">Keep going</button><button class="btn small ghost" id="resumeNew" type="button">Start a new test</button></div></div>
     <form id="startForm" style="display:grid;gap:14px">
       <div class="field"><label for="stuName">Your name</label><input type="text" id="stuName" autocomplete="off" maxlength="40" placeholder="First name or student code" required></div>
       <div class="field"><label for="stuGroup">Your group</label>
@@ -151,7 +157,7 @@ td.num{font-variant-numeric:tabular-nums;font-weight:700}
       <div class="row"><button class="btn" type="submit" id="startBtn">Start</button><span class="muted" id="browserNote"></span></div>
     </form>
   </section>
-  <div class="center"><button class="link" id="teacherLink" type="button">Teacher results</button></div>
+  <div class="center"><button class="link" id="teacherLink" type="button">Teacher: score student files</button></div>
 </main>
 
 <!-- ============ MIC CHECK ============ -->
@@ -200,30 +206,20 @@ td.num{font-variant-numeric:tabular-nums;font-weight:700}
   </section>
 </main>
 
-<!-- ============ DONE ============ -->
+<!-- ============ DONE: SAVE AND TURN IN ============ -->
 <main class="wrap" id="v-done" hidden>
-  <section class="card center">
-    <div class="brand" style="justify-content:center"><span class="chip g">Done!</span></div>
-    <h2>You're all done!</h2>
-    <p class="muted" id="doneMsg">Saving your reading…</p>
-    <div><button class="btn ghost" id="homeBtn" type="button">Back to start</button></div>
-  </section>
-</main>
-
-<!-- ============ TEACHER LOGIN ============ -->
-<main class="wrap" id="v-tlogin" hidden>
   <section class="card">
-    <div><p class="eyebrow">Teacher</p><h2>CORE Phonics results</h2></div>
-    <div id="loginLocal" style="display:grid;gap:12px">
-      <p class="muted">Enter the teacher PIN.</p>
-      <div class="field"><label for="pin">PIN</label><input type="password" id="pin" inputmode="numeric" autocomplete="off"></div>
-      <div class="row"><button class="btn" id="pinBtn" type="button">Open results</button><span class="status" id="pinMsg" style="color:var(--bad)"></span></div>
+    <div class="brand" style="justify-content:center"><span class="chip g">Done!</span></div>
+    <h2 class="center">Great reading! Now turn it in.</h2>
+    <div class="turnin">
+      <div class="tstep"><span class="tnum">1</span><div style="display:grid;gap:10px"><b>Save your file.</b>
+        <button class="btn good" id="saveFileBtn" type="button">Save my file</button>
+        <span class="muted" id="saveFileMsg"></span></div></div>
+      <div class="tstep"><span class="tnum">2</span><div><b>Open Google Classroom.</b><br><span class="muted">Open the assignment <b>CORE Phonics Check</b>.</span></div></div>
+      <div class="tstep"><span class="tnum">3</span><div><b>Add or create → File.</b><br><span class="muted">Choose <b id="fileNameShow">your file</b> from <b>Downloads</b>.</span></div></div>
+      <div class="tstep"><span class="tnum">4</span><div><b>Turn in.</b></div></div>
     </div>
-    <div id="loginFire" hidden style="display:grid;gap:12px">
-      <p class="muted">Sign in with the Google account named in your Firestore rules.</p>
-      <div class="row"><button class="btn" id="googleBtn" type="button">Sign in with Google</button><span class="status" id="gMsg" style="color:var(--bad)"></span></div>
-    </div>
-    <div><button class="link" id="backHome1" type="button">Back to student start</button></div>
+    <div class="center"><button class="btn ghost" id="homeBtn" type="button">I turned it in. Back to start</button></div>
   </section>
 </main>
 
@@ -232,17 +228,17 @@ td.num{font-variant-numeric:tabular-nums;font-weight:700}
   <div class="tbar">
     <div><p class="eyebrow">Teacher results</p><h1>CORE Phonics Check</h1></div>
     <div class="row">
-      <button class="btn small ghost" id="refreshBtn" type="button">Refresh</button>
+      <label class="btn small" for="openFiles" style="cursor:pointer">Open student files</label>
+      <input type="file" id="openFiles" accept=".json,.zip,application/json,application/zip" multiple hidden>
       <button class="btn small ghost" id="csvBtn" type="button">Download CSV</button>
       <button class="btn small ghost" id="copyBtn" type="button">Copy for Google Sheets</button>
       <button class="btn small ghost" id="linkBtn" type="button">Student link</button>
-      <button class="btn small ghost" id="jsonBtn" type="button" hidden>Back up (JSON)</button>
-      <label class="btn small ghost" id="importLbl" hidden for="importFile" style="cursor:pointer">Import backup</label>
-      <input type="file" id="importFile" accept="application/json" hidden>
+      <button class="btn small ghost" id="clearBtn" type="button">Clear all</button>
       <button class="btn small ghost" id="signOutBtn" type="button">Close</button>
     </div>
   </div>
-  <p class="notice" id="localNotice" hidden>Local mode: results are saved on this computer only. Add your Firebase settings to the page to collect results from every student device.</p>
+  <div class="dropzone" id="dropZone"><b>Open the files students turned in.</b><span class="muted">In Google Classroom, open the assignment's Drive folder, select all the files and choose <b>Download</b> (you get one .zip). Then click <b>Open student files</b> and choose that .zip, or drag it here. You can also open single .json files.</span><span class="muted" style="font-size:14px">Everything stays on this computer. Nothing is uploaded. Your scoring is saved in this browser until you click Clear all.</span><span class="status" id="openMsg" style="text-align:left"></span></div>
+  <div class="row" id="clearZone"></div>
   <section class="card" id="linkCard" hidden>
     <div><p class="eyebrow">Student link</p><h3>Choose the parts students will read</h3></div>
     <p class="muted" style="font-size:15px">Parts A–D are letters and sounds (you score these yourself from the recordings). Parts E–L are words and are scored automatically first.</p>
@@ -255,7 +251,7 @@ td.num{font-variant-numeric:tabular-nums;font-weight:700}
     <thead id="thead"></thead>
     <tbody id="tbody"></tbody>
   </table></div>
-  <p class="muted" id="emptyMsg" hidden>No tests yet. When a student finishes, their results appear here.</p>
+  <p class="muted" id="emptyMsg" hidden>No student files open yet.</p>
   <section class="card" id="detail" hidden></section>
 </main>
 
@@ -264,19 +260,10 @@ td.num{font-variant-numeric:tabular-nums;font-weight:700}
    SETTINGS
    ===================================================================== */
 const CONFIG = {
-  firebase: {
-    apiKey: "AIzaSyAlvTecXVHkoR7CZBMZ7rBwP47bN8ynkK0",
-    authDomain: "daybook-3c39c.firebaseapp.com",
-    projectId: "daybook-3c39c",
-    storageBucket: "daybook-3c39c.firebasestorage.app",
-    messagingSenderId: "673483245849",
-    appId: "1:673483245849:web:9101a11007bc527501dd88"
-  },
-  collection: 'coreAttempts',
-  teacherPin: '2468',            // local mode only
   speechLang: 'en-US',           // speech recognition language
   defaultParts: 'ABCDEFGHIJKL',  // parts used when the link has no ?parts= (all of the survey)
   silenceStopMs: 3500,           // stop recording after this much quiet once the student has spoken
+  fileFormat: 'core-phonics-check',
 };
 
 /* ======================= TEST CONTENT (CORE Phonics Survey, 2nd ed.) ======================= */
@@ -356,7 +343,7 @@ const LETTER_NAMES = {
 
 /* ======================= HELPERS ======================= */
 const $ = s => document.querySelector(s);
-const VIEWS = ['v-home','v-mic','v-intro','v-read','v-done','v-tlogin','v-teacher'];
+const VIEWS = ['v-home','v-mic','v-intro','v-read','v-done','v-teacher'];
 function show(id){ VIEWS.forEach(v => { $('#'+v).hidden = v !== id; }); window.scrollTo(0,0); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -380,55 +367,37 @@ function soundKey(w){
     .replace(/([a-z])\1+/g,'$1');
 }
 
-/* ======================= STORAGE: LOCAL (IndexedDB) ======================= */
-const LocalStore = {
-  kind:'local', _db:null,
+/* ======================= STORAGE (this browser only, IndexedDB) =======================
+   drafts:   a student's test in progress, so a closed tab can be resumed on the same device
+   attempts: student files the teacher has opened, with the teacher's scoring
+   audio:    recordings for opened files                                                    */
+const DB = {
+  _db:null,
   async open(){
     if(this._db) return this._db;
     this._db = await new Promise((res,rej)=>{
-      const r = indexedDB.open('corePhonicsCheck',1);
-      r.onupgradeneeded = () => { const d=r.result; d.createObjectStore('attempts',{keyPath:'id'}); d.createObjectStore('audio'); };
+      const r = indexedDB.open('corePhonicsCheckFiles',1);
+      r.onupgradeneeded = () => { const d=r.result; d.createObjectStore('drafts',{keyPath:'id'}); d.createObjectStore('attempts',{keyPath:'id'}); d.createObjectStore('audio'); };
       r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
     });
     return this._db;
   },
-  async tx(store, mode, fn){
+  async tx(names, mode, fn){
     const d = await this.open();
-    return new Promise((res,rej)=>{ const t=d.transaction(store,mode); const req=fn(t.objectStore(store)); t.oncomplete=()=>res(req ? req.result : undefined); t.onerror=()=>rej(t.error); });
+    return new Promise((res,rej)=>{ const t=d.transaction(names,mode); const req=fn(t); t.oncomplete=()=>res(req && 'result' in req ? req.result : req); t.onerror=()=>rej(t.error); t.onabort=()=>rej(t.error); });
   },
-  async create(a){ await this.tx('attempts','readwrite',s=>s.put(a)); },
-  async update(id, patch){ const cur = await this.tx('attempts','readonly',s=>s.get(id)); await this.tx('attempts','readwrite',s=>s.put(Object.assign(cur||{id}, patch))); },
-  async list(){ const all = (await this.tx('attempts','readonly',s=>s.getAll())) || []; return all.sort((a,b)=>b.createdAt-a.createdAt); },
-  async saveAudio(id,key,blob){ await this.tx('audio','readwrite',s=>s.put({blob, mime:blob.type}, id+':'+key)); },
-  async getAudio(id,key){ const r = await this.tx('audio','readonly',s=>s.get(id+':'+key)); return r ? r.blob : null; },
-  async remove(id, keys){ await this.tx('attempts','readwrite',s=>s.delete(id)); await this.tx('audio','readwrite',s=>{ keys.forEach(k=>s.delete(id+':'+k)); }); }
+  get(store,key){ return this.tx(store,'readonly',t=>t.objectStore(store).get(key)); },
+  put(store,val,key){ return this.tx(store,'readwrite',t=>key===undefined ? t.objectStore(store).put(val) : t.objectStore(store).put(val,key)); },
+  del(store,key){ return this.tx(store,'readwrite',t=>t.objectStore(store).delete(key)); },
+  all(store){ return this.tx(store,'readonly',t=>t.objectStore(store).getAll()); },
+  clear(store){ return this.tx(store,'readwrite',t=>t.objectStore(store).clear()); }
 };
-
-/* ======================= STORAGE: FIREBASE ======================= */
-const FireStore = {
-  kind:'firebase', fs:null, auth:null,
-  async init(){
-    const v='10.14.1', base='https://cdn.jsdelivr.net/npm/firebase@'+v+'/';
-    await loadScript(base+'firebase-app-compat.js');
-    await loadScript(base+'firebase-auth-compat.js');
-    await loadScript(base+'firebase-firestore-compat.js');
-    if(!firebase.apps.length) firebase.initializeApp(CONFIG.firebase);
-    this.fs = firebase.firestore(); this.auth = firebase.auth();
-  },
-  col(){ return this.fs.collection(CONFIG.collection); },
-  async create(a){ await this.col().doc(a.id).set(a); },
-  async update(id, patch){ await this.col().doc(id).update(patch); },
-  async list(){ const q = await this.col().orderBy('createdAt','desc').get(); return q.docs.map(d=>d.data()); },
-  async saveAudio(id,key,blob){ const b64 = await blobToB64(blob); await this.col().doc(id).collection('audio').doc(String(key)).set({ b64, mime: blob.type || 'audio/webm' }); },
-  async getAudio(id,key){ const d = await this.col().doc(id).collection('audio').doc(String(key)).get(); return d.exists ? b64ToBlob(d.data().b64, d.data().mime) : null; },
-  async remove(id){ const sub = await this.col().doc(id).collection('audio').get(); await Promise.all(sub.docs.map(d=>d.ref.delete())); await this.col().doc(id).delete(); }
+const store = {
+  async list(){ const all = (await DB.all('attempts')) || []; return all.sort((a,b)=>(a.name||'').localeCompare(b.name||'') || b.createdAt-a.createdAt); },
+  async update(id, patch){ const cur = await DB.get('attempts', id); await DB.put('attempts', Object.assign(cur||{id}, patch)); },
+  async getAudio(id,key){ const r = await DB.get('audio', id+':'+key); return r ? r.blob : null; },
+  async remove(id, keys){ await DB.del('attempts', id); for(const k of keys) await DB.del('audio', id+':'+k); }
 };
-
-let store = LocalStore;
-const LOCAL_ONLY = new URLSearchParams(location.search).get('local') === '1';
-let storeReady = (async () => {
-  if(CONFIG.firebase && !LOCAL_ONLY){ try{ await FireStore.init(); store = FireStore; } catch(e){ console.error(e); store = LocalStore; } }
-})();
 
 /* ======================= WHICH PARTS ======================= */
 function parsePartsParam(){
@@ -492,19 +461,45 @@ function needsCheck(m){ return (m.final !== true && m.final !== false) && m.auto
 /* ======================= STUDENT FLOW ======================= */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 $('#browserNote').textContent = SR ? '' : 'Tip: Chrome or Edge works best.';
-let att = null, saveErrors = 0, pending = [];
-function track(p){ const q = p.catch(e => { console.error(e); saveErrors++; }); pending.push(q); return q; }
+let att = null, audioMap = {};   // audioMap: line key -> Blob, kept in memory and in the device draft
+
+/* A draft is kept on this device after every line, so a closed tab or a crash does not lose the reading. */
+async function saveDraft(){
+  try{
+    const audio = {};
+    for(const [k, b] of Object.entries(audioMap)) audio[k] = b;   // IndexedDB stores Blobs directly
+    await DB.put('drafts', { ...att, li, _audio: audio, savedAt: Date.now() });
+  }catch(e){ console.error('draft', e); }
+}
+async function loadDraft(){
+  try{ const all = await DB.all('drafts'); return (all || []).sort((a,b)=>b.savedAt-a.savedAt)[0] || null; }catch(e){ return null; }
+}
+async function dropDrafts(){ try{ await DB.clear('drafts'); }catch(e){} }
+
+(async () => {
+  const d = await loadDraft(); if(!d) return;
+  const doneLines = (d.lines||[]).filter(l => l.status !== 'todo').length;
+  $('#resumeText').innerHTML = '<b>' + esc(d.name) + '</b>, you started this test. ' + (d.status === 'done' ? 'You finished it. Save and turn in your file.' : 'You read ' + doneLines + ' of ' + d.lines.length + '.');
+  $('#resumeBtn').textContent = d.status === 'done' ? 'Save my file' : 'Keep going';
+  $('#resumeBox').hidden = false;
+  $('#resumeBtn').onclick = () => {
+    const { _audio, li: savedLi, savedAt, ...rest } = d;
+    att = rest; audioMap = _audio || {}; li = savedLi || 0; introShownFor = null;
+    $('#resumeBox').hidden = true;
+    if(att.status === 'done' || li >= att.lines.length) finishTest();
+    else startMic(true);
+  };
+  $('#resumeNew').onclick = async () => { await dropDrafts(); $('#resumeBox').hidden = true; };
+})();
 
 $('#startForm').addEventListener('submit', async e => {
   e.preventDefault();
   const name = $('#stuName').value.trim(); if(!name) return;
-  $('#startBtn').disabled = true;
-  await storeReady;
-  att = { id: uid(), name, group: $('#stuGroup').value, createdAt: Date.now(), status:'in_progress', parts: RUN_PARTS, lines: buildLines(RUN_PARTS), recog: !!SR, ua: navigator.userAgent.slice(0,120) };
-  saveErrors = 0; pending = [];
-  track(retry(()=>store.create(att)));
-  $('#startBtn').disabled = false;
-  startMic();
+  await dropDrafts();
+  att = { format: CONFIG.fileFormat, version: 1, id: uid(), name, group: $('#stuGroup').value, createdAt: Date.now(), status:'in_progress', parts: RUN_PARTS, lines: buildLines(RUN_PARTS), recog: !!SR, ua: navigator.userAgent.slice(0,120) };
+  audioMap = {}; li = 0; introShownFor = null;
+  saveDraft();
+  startMic(false);
 });
 
 /* ---------- microphone ---------- */
@@ -521,7 +516,9 @@ function startMeter(el){
   };
   loop();
 }
-function startMic(){
+let resumeAfterMic = false;
+function startMic(resume){
+  resumeAfterMic = !!resume;
   show('v-mic');
   $('#micAsk').hidden = false; $('#micOk').hidden = true; $('#micNo').hidden = true;
   if(stream){ $('#micAsk').hidden = true; $('#micOk').hidden = false; startMeter($('#checkMeter')); }
@@ -538,7 +535,7 @@ async function openMic(){
 }
 $('#micBtn').onclick = openMic;
 $('#micRetry').onclick = openMic;
-$('#micGo').onclick = () => { li = 0; showIntroOrLine(); };
+$('#micGo').onclick = () => { if(!resumeAfterMic) li = 0; showIntroOrLine(); };
 
 /* ---------- parts and lines ---------- */
 let li = 0, recording = false, stopFn = null, lastTake = null, introShownFor = null;
@@ -668,68 +665,107 @@ function commitLine(skipped){
     const heard = [...new Set(lastTake.heard.map(h=>h.trim()).filter(Boolean))].slice(0,12);
     line.status = 'read'; line.audio = true; line.heard = heard;
     line.marks = autoScore(line, heard, P.type);
-    const blob = lastTake.blob, id = att.id, key = line.key;
-    track(retry(()=>store.saveAudio(id, key, blob)));
+    audioMap[line.key] = lastTake.blob;
   }
-  const lines = att.lines.map(x => ({ ...x }));
-  track(retry(()=>store.update(att.id, { lines })));
   li++;
+  saveDraft();
   if(li < att.lines.length) showIntroOrLine();
   else finishTest();
 }
+function fileName(){
+  const d = new Date(att.createdAt), ymd = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return 'CORE_Phonics_' + att.name.replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,30) + '_' + ymd + '.json';
+}
+async function buildFile(){
+  const audio = {};
+  for(const [k, b] of Object.entries(audioMap)) audio[k] = { b64: await blobToB64(b), mime: b.type || 'audio/webm' };
+  return JSON.stringify({ ...att, audio });
+}
 async function finishTest(){
   cancelAnimationFrame(meterRaf);
+  if(att.status !== 'done'){ att.status = 'done'; att.finishedAt = Date.now(); }
+  await saveDraft();
+  if(stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
   show('v-done');
-  $('#doneMsg').textContent = 'Saving your reading… please wait.';
-  $('#homeBtn').hidden = true;
-  await Promise.all(pending);
-  try{ await retry(()=>store.update(att.id, { status:'done', finishedAt: Date.now() })); }catch(e){ saveErrors++; }
-  $('#doneMsg').textContent = saveErrors ? 'Some of your reading did not save. Please tell your teacher.' : 'Your reading is saved. Great work!';
-  $('#homeBtn').hidden = false;
+  $('#fileNameShow').textContent = fileName();
+  $('#saveFileMsg').textContent = '';
 }
-$('#homeBtn').onclick = () => { $('#stuName').value = ''; att = null; introShownFor = null; show('v-home'); };
+$('#saveFileBtn').onclick = async () => {
+  const btn = $('#saveFileBtn'); btn.disabled = true; $('#saveFileMsg').textContent = 'Saving…';
+  try{
+    download(fileName(), await buildFile(), 'application/json');
+    att.savedFile = true; await saveDraft();
+    $('#saveFileMsg').innerHTML = '✓ Saved in <b>Downloads</b>. Now go to Google Classroom.';
+  }catch(e){ console.error(e); $('#saveFileMsg').textContent = 'That did not work. Tap Save my file again, or tell your teacher.'; }
+  btn.disabled = false;
+};
+$('#homeBtn').onclick = async () => {
+  if(!att || !att.savedFile){ $('#saveFileMsg').innerHTML = '<b style="color:var(--bad)">First tap Save my file.</b>'; return; }
+  await dropDrafts(); $('#stuName').value = ''; att = null; audioMap = {}; introShownFor = null; show('v-home');
+};
 
 /* ======================= TEACHER ======================= */
 let rows = [], selId = null;
-$('#teacherLink').onclick = async () => {
-  await storeReady;
-  show('v-tlogin');
-  const fire = store.kind === 'firebase';
-  $('#loginLocal').hidden = fire; $('#loginFire').hidden = !fire;
-  if(fire && store.auth.currentUser) openDashboard();
-};
-$('#backHome1').onclick = () => show('v-home');
-$('#pinBtn').onclick = () => { if($('#pin').value === CONFIG.teacherPin){ $('#pin').value=''; $('#pinMsg').textContent=''; openDashboard(); } else $('#pinMsg').textContent = 'That PIN is not right.'; };
-$('#pin').addEventListener('keydown', e => { if(e.key === 'Enter') $('#pinBtn').click(); });
-$('#googleBtn').onclick = async () => {
-  try{ const prov = new firebase.auth.GoogleAuthProvider(); prov.setCustomParameters({ prompt:'select_account' }); await store.auth.signInWithPopup(prov); openDashboard(); }
-  catch(e){ $('#gMsg').textContent = 'Sign-in did not finish: ' + (e.code || e.message); }
-};
-$('#signOutBtn').onclick = async () => { stopAudio(); if(store.kind === 'firebase'){ try{ await store.auth.signOut(); }catch(e){} } show('v-home'); };
-$('#refreshBtn').onclick = () => loadRows();
+$('#teacherLink').onclick = () => openDashboard();
+$('#signOutBtn').onclick = () => { stopAudio(); show('v-home'); };
 
-async function openDashboard(){
-  show('v-teacher');
-  const local = store.kind === 'local';
-  $('#localNotice').hidden = !local; $('#jsonBtn').hidden = !local; $('#importLbl').hidden = !local;
-  await loadRows();
-}
+async function openDashboard(){ show('v-teacher'); await loadRows(); }
 async function loadRows(){
   try{ rows = await store.list(); }
-  catch(e){
-    rows = [];
-    const who = store.kind === 'firebase' && store.auth.currentUser ? store.auth.currentUser.email : '';
-    $('#stats').innerHTML = '<div class="notice" style="display:grid;gap:8px;grid-column:1/-1"><span>Could not read results (' + esc(e.code || e.message) + ').</span>' +
-      (who ? '<span>You are signed in as <b>' + esc(who) + '</b>. This must be the same email that is written in the coreAttempts rules in Firebase.</span>' : '') +
-      '<span>Also check that the coreAttempts rules were pasted inside the rules and that you clicked <b>Publish</b>.</span>' +
-      (who ? '<div><button class="btn small" id="switchAcct" type="button">Sign in with a different Google account</button></div>' : '') + '</div>';
-    const sw = document.getElementById('switchAcct');
-    if(sw) sw.onclick = async () => { try{ await store.auth.signOut(); const prov = new firebase.auth.GoogleAuthProvider(); prov.setCustomParameters({ prompt:'select_account' }); await store.auth.signInWithPopup(prov); loadRows(); }catch(err){ show('v-tlogin'); } };
-    $('#tbody').innerHTML = ''; $('#thead').innerHTML = ''; return;
-  }
+  catch(e){ rows = []; $('#openMsg').textContent = 'This browser could not open its storage (' + (e.message || e) + '). Try Chrome, and not a private window.'; }
   renderTable();
   if(selId && rows.find(r=>r.id===selId)) renderDetail(selId); else { $('#detail').hidden = true; selId = null; }
 }
+
+/* ---------- opening student files (.json, or the .zip Google Drive makes) ---------- */
+let jszipReady = null;
+function needZip(){ return jszipReady || (jszipReady = loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js')); }
+async function readEntries(files){
+  const out = [];
+  for(const f of files){
+    if(/\.zip$/i.test(f.name) || f.type === 'application/zip' || f.type === 'application/x-zip-compressed'){
+      await needZip();
+      const zip = await JSZip.loadAsync(f);
+      const names = Object.keys(zip.files).filter(n => !zip.files[n].dir && /\.json$/i.test(n) && !/(^|\/)__MACOSX\//.test(n));
+      for(const n of names) out.push({ name: n.split('/').pop(), text: await zip.files[n].async('string') });
+    } else out.push({ name: f.name, text: await f.text() });
+  }
+  return out;
+}
+async function importFiles(files){
+  const msg = $('#openMsg'); msg.style.color = ''; msg.textContent = 'Opening…';
+  let added = 0, replaced = 0, bad = [];
+  try{
+    const entries = await readEntries(files);
+    for(const e of entries){
+      let data; try{ data = JSON.parse(e.text); }catch(err){ bad.push(e.name); continue; }
+      if(!data || data.format !== CONFIG.fileFormat || !Array.isArray(data.lines) || !data.id){ bad.push(e.name); continue; }
+      const { audio, ...rec } = data;
+      const existing = await DB.get('attempts', rec.id);
+      if(existing){
+        // Same test opened again: keep the teacher's marks already made.
+        rec.lines = rec.lines.map((l, i) => { const old = existing.lines && existing.lines[i]; return old && old.key === l.key ? { ...l, marks: l.marks.map((m, mi) => ({ ...m, final: old.marks[mi] ? old.marks[mi].final : null })) } : l; });
+        replaced++;
+      } else added++;
+      rec.fileName = e.name; rec.openedAt = Date.now();
+      await DB.put('attempts', rec);
+      for(const [k, v] of Object.entries(audio || {})) await DB.put('audio', { blob: b64ToBlob(v.b64, v.mime), mime: v.mime }, rec.id + ':' + k);
+    }
+    msg.textContent = (added ? added + ' new student file' + (added>1?'s':'') + ' opened. ' : '') + (replaced ? replaced + ' already open (your scoring was kept). ' : '') + (bad.length ? bad.length + ' file(s) were not CORE check files: ' + bad.slice(0,4).join(', ') : '') || 'No CORE check files found.';
+    if(bad.length && !added && !replaced) msg.style.color = 'var(--bad)';
+  }catch(err){ console.error(err); msg.style.color = 'var(--bad)'; msg.textContent = 'Could not open those files (' + (err.message || err) + ').'; }
+  await loadRows();
+}
+$('#openFiles').onchange = async e => { const f = [...e.target.files]; e.target.value = ''; if(f.length) await importFiles(f); };
+const dz = $('#dropZone');
+['dragenter','dragover'].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.add('over'); }));
+['dragleave','drop'].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.remove('over'); }));
+dz.addEventListener('drop', e => { const f = [...(e.dataTransfer && e.dataTransfer.files || [])]; if(f.length) importFiles(f); });
+$('#clearBtn').onclick = () => {
+  $('#clearZone').innerHTML = '<div class="confirm"><span>Remove all opened student files and your scoring from this browser? (Download the CSV first if you need it.)</span><button class="btn small bad" id="clearYes" type="button">Clear all</button><button class="btn small ghost" id="clearNo" type="button">Keep them</button></div>';
+  $('#clearNo').onclick = () => $('#clearZone').innerHTML = '';
+  $('#clearYes').onclick = async () => { stopAudio(); await DB.clear('attempts'); await DB.clear('audio'); $('#clearZone').innerHTML = ''; selId = null; await loadRows(); };
+};
 
 function summarize(a){
   const secs = sectionsFor(a.parts || []);
@@ -841,7 +877,7 @@ function renderDetail(id){
     }
     body += html + '</div>';
   });
-  el.innerHTML = head + body + '<div id="delZone"><button class="btn small ghost" id="delBtn" type="button">Delete this test</button></div>';
+  el.innerHTML = head + body + '<div id="delZone"><button class="btn small ghost" id="delBtn" type="button">Remove this file</button></div>';
   $('#rateBtn').onclick = () => { rate = rate === 1 ? 0.75 : 1; if(curAudio) curAudio.playbackRate = rate; $('#rateBtn').textContent = 'Speed: '+(rate===1?'normal':'slow'); };
   el.querySelectorAll('[data-play]').forEach(b => b.onclick = () => playLine(a, b.dataset.play, b));
   const save = async () => { renderTable(); renderDetail(a.id); try{ await store.update(a.id, { lines: a.lines }); }catch(e){ alertInline('Could not save that change: ' + (e.code || e.message)); } };
@@ -857,7 +893,7 @@ function renderDetail(id){
     keepScroll(save);
   });
   $('#delBtn').onclick = () => {
-    $('#delZone').innerHTML = '<div class="confirm"><span>Delete <b>'+esc(a.name)+'</b>\'s test and recordings for good?</span><button class="btn small bad" id="delYes" type="button">Delete</button><button class="btn small ghost" id="delNo" type="button">Keep it</button></div>';
+    $('#delZone').innerHTML = '<div class="confirm"><span>Remove <b>'+esc(a.name)+'</b>\'s file from this browser? (The file in Classroom is not touched.)</span><button class="btn small bad" id="delYes" type="button">Remove</button><button class="btn small ghost" id="delNo" type="button">Keep it</button></div>';
     $('#delNo').onclick = () => renderDetail(a.id);
     $('#delYes').onclick = async () => { try{ stopAudio(); await store.remove(a.id, a.lines.map(l=>l.key)); selId = null; await loadRows(); }catch(e){ alertInline('Could not delete: '+(e.code||e.message)); } };
   };
@@ -909,27 +945,6 @@ $('#copyBtn').onclick = async () => {
   const tsv = tableData().map(r => r.map(c => String(c).replace(/[\t\n]/g,' ')).join('\t')).join('\n');
   try{ await navigator.clipboard.writeText(tsv); $('#copyBtn').textContent = 'Copied! Paste into Sheets'; }catch(e){ $('#copyBtn').textContent = 'Copy failed: use CSV'; }
   setTimeout(()=>$('#copyBtn').textContent='Copy for Google Sheets', 3000);
-};
-$('#jsonBtn').onclick = async () => {
-  const out = [];
-  for(const a of rows){
-    const audio = {};
-    for(const l of (a.lines||[])) if(l.audio){ const b = await store.getAudio(a.id, l.key); if(b) audio[l.key] = { b64: await blobToB64(b), mime: b.type }; }
-    out.push({ ...a, _audio: audio });
-  }
-  download('core-phonics-backup.json', JSON.stringify(out), 'application/json');
-};
-$('#importFile').onchange = async e => {
-  const f = e.target.files[0]; if(!f) return;
-  try{
-    const data = JSON.parse(await f.text());
-    for(const a of data){
-      const { _audio, ...rec } = a; await store.create(rec);
-      for(const [k, v] of Object.entries(_audio || {})) await store.saveAudio(rec.id, k, b64ToBlob(v.b64, v.mime));
-    }
-    await loadRows();
-  }catch(err){ alertInline('That file could not be imported.'); }
-  e.target.value = '';
 };
 </script>
 </body>
